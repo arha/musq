@@ -3,13 +3,27 @@
 import paho.mqtt.client as mqtt
 import subprocess, os, yaml, shlex
 from time import sleep
-import pprint 
+import pprint, argparse
 
 
 from glue_classes import input_glue_script, output_glue_pipe, output_glue
-#testaa
 
 class musq():
+    def __init__(self):
+        self.config_file = os.path.join(os.path.expanduser("~"), "musq.conf")
+        print(self.config_file)
+        import sys
+        self.config_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
+        print(self.config_file)
+
+        parser=argparse.ArgumentParser("musq demo")
+        parser.add_argument("-c", '--config', help='Configuration file', required=False)
+        args=parser.parse_args()
+
+        # print(args.config)
+        # raise SystemExit
+
+
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
 
@@ -44,7 +58,15 @@ class musq():
                         my_env["MUSQ_SUB_TRIGGER"] = key
                         my_env["MUSQ_PAYLOAD"] = msg.payload
                         print("------ BEGIN SCRIPT EXEC -----")
-                        subprocess.call(parts, env=my_env)
+                        try:
+                            if (os.path.exists(parts[0]) and os.path.isfile(parts[0])):
+                                print(parts[0] + " exists")
+                                #subprocess.call(parts, env=my_env)
+                            else:
+                                print(parts[0] + " is not a file")
+                        except Exception as error:
+                            print("Script run exception: " + sys.exc_info()[0])
+                            print(str(error))
                         print("------- DONE SCRIPT EXEC -----")
 
     def on_glue_output_pub(self, glue_class, topic, payload):
@@ -53,11 +75,11 @@ class musq():
         
 
     def load_inputs_simple(self):
-        a = yaml.load(open("/home/arha/musq/input.conf"))
+        a = yaml.load(open(self.config_file))
         return a
 
     def load_inputs(self):
-        a = yaml.load(open("/home/arha/musq/input.conf"))
+        a = yaml.load(open(self.config_file))
         a = a['inputs']
 
         inputs = {}
@@ -76,7 +98,7 @@ class musq():
         
 
     def load_pipes(self):
-        a = yaml.load(open("/home/arha/musq/output.conf"))
+        a = yaml.load(open(self.config_file))
         pipes = {}
         for key, output in a['outputs'].items():
             if (output['type'] == 'pipe'):
@@ -84,7 +106,7 @@ class musq():
         return pipes
 
     def load_outputs(self):
-        a = yaml.load(open("/home/arha/musq/output.conf"))
+        a = yaml.load(open(self.config_file))
         pipes = {}
 
         for key, output in a['outputs'].items():

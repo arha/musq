@@ -1,5 +1,6 @@
 import os, shlex
-import subprocess, os, yaml, shlex
+import subprocess, os, yaml, shlex, sys
+import traceback
 
 class output_glue:
     name = ""
@@ -109,19 +110,41 @@ class input_glue_script(input_glue):
     
     def execute(self, topic_received, msg):
         if (self.topic != None and self.topic_matches_sub(self.topic, topic_received)):
-            for call in self.scripts:
-                print("CALL = " + call)
-                parts = shlex.split(call)
-                # check for $, replace with message
-                for index, part in enumerate(parts):
-                    if (part == '$'):
-                        parts[index] = msg.payload.decode('UTF-8')
-                my_env = os.environ.copy()
+            if False:
+                # shell mode = false
+                for call in self.scripts:
+                    print("CALL = " + call)
+                    parts = shlex.split(call)
+                    # check for $, replace with message
+                    for index, part in enumerate(parts):
+                        if (part == '$'):
+                            parts[index] = msg.payload.decode('UTF-8')
+                    my_env = os.environ.copy()
 
-                # add per message environment vars
-                my_env["MUSQ_TOPIC_IN"] = msg.topic
-                my_env["MUSQ_SUB_TRIGGER"] = self.topic
-                my_env["MUSQ_PAYLOAD"] = msg.payload
-                print("------ BEGIN GLUE SCRIPT EXEC -----")
-                subprocess.call(parts, env=my_env)
-                print("------- DONE GLUE SCRIPT EXEC -----")
+                    # add per message environment vars
+                    my_env["MUSQ_TOPIC_IN"] = msg.topic
+                    my_env["MUSQ_SUB_TRIGGER"] = self.topic
+                    my_env["MUSQ_MESSAGE"] = msg.payload
+                    print("------ BEGIN GLUE SCRIPT EXEC -----")
+                    try:
+                        subprocess.call(parts, env=my_env)
+                    except:
+                        print("Exception ex")
+                    print("------- DONE GLUE SCRIPT EXEC -----")
+            else:
+                # shell mode true
+                for call in self.scripts:
+                    print("CALL = " + call)
+                    message = msg.payload.decode('UTF-8')
+                    call = call.replace('%MSG%', message)
+                    my_env = os.environ.copy()
+                    my_env["MUSQ_TOPIC_IN"] = msg.topic
+                    my_env["MUSQ_SUB_TRIGGER"] = self.topic
+                    my_env["MUSQ_MESSAGE"] = msg.payload
+                    print("------ BEGIN GLUE SCRIPT EXEC -----")
+                    try:
+                        subprocess.call(call, env=my_env, shell=True)
+                    except:
+                        traceback.print_exc()
+                    print("------- DONE GLUE SCRIPT EXEC -----")
+
