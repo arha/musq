@@ -1,6 +1,7 @@
 import os, shlex
 import subprocess, os, yaml, shlex, sys
 import traceback
+import logging
 
 class output_glue:
     name = ""
@@ -24,9 +25,9 @@ class output_glue_pipe(output_glue):
         self.topics = topics
 
     def open(self):
-        print("glue pipe opening " + self.path)
+        logging.debug("glue pipe opening " + self.path)
         self.__pipe = os.fdopen(os.open(self.path, os.O_RDONLY|os.O_NONBLOCK))
-        print("glue pipe " + self.name + " init done")
+        logging.debug("glue pipe " + self.name + " init done")
 
 
     def loop(self):
@@ -148,3 +149,17 @@ class input_glue_script(input_glue):
                         traceback.print_exc()
                     print("------- DONE GLUE SCRIPT EXEC -----")
 
+
+class input_glue_module(input_glue):
+    def __init__ (self, name, topic, module):
+        self.name=name
+        self.topic=topic
+        self.module=module
+
+    def set_creator(self, creator):
+        self.creator = creator
+
+    def execute(self, topic_received, msg):
+        if (self.topic != None and self.topic_matches_sub(self.topic, topic_received)):
+            logging.debug("Calling module: " + self.name + "; topic received: " + topic_received)
+            self.module.call(self.topic, topic_received, msg, "config line")
