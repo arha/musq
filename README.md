@@ -1,7 +1,7 @@
 musq
 ====
 
-Run scripts and toggle GPIO on Raspberry PI (clones, and various SBC boards) by MQTT subscriptions.
+Run scripts and toggle GPIO on Raspberry PI (clones, and various SBC boards) by MQTT subscriptions. You can either subscribe shell scripts to topics or write python3 modules using your favourite libs.
 
 
 What's supported?
