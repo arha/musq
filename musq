@@ -25,6 +25,7 @@ class musq():
         print(self.config_file)
         import sys
         self.config_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
+        self.inputs=None
         print(self.config_file)
 
         parser=argparse.ArgumentParser("musq demo")
@@ -69,8 +70,7 @@ class musq():
     def reload_modules(self):
         logging.info("Reloading modules...")
         modules = {}
-
-        path = "/home/arha/musq/musq_modules/"
+        path = "/home/pi/musq/musq_modules/"
         logging.debug("Modules path %s", path)
         files = [f for f in listdir(path) if isfile(join(path, f))]
         for xfile in files:
@@ -112,7 +112,10 @@ class musq():
         logging.debug("Publish event from glue_class: " + glue_class.name + " to topic " + topic + " with pyload " + payload)
         self.mqtt_client.publish(topic, payload, 2)
 
-    def load_inputs(self):
+    def load_inputs(self, cache=True):
+        if (cache == True and self.inputs != None):
+            return self.inputs
+
         a = yaml.load(open(self.config_file))
         a = a['inputs']
 
@@ -135,6 +138,7 @@ class musq():
                     pass
         
         # pp.pprint(inputs)
+        self.inputs = inputs
         return inputs
         
 
