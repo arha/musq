@@ -6,6 +6,7 @@ from time import sleep
 import pprint
 
 from os import listdir
+import sys
 from os.path import isfile, join
 
 
@@ -20,18 +21,13 @@ class musq():
     mqtt_keepalive=12
 
     def __init__(self):
-        self.config_file = os.path.join(os.path.expanduser("~"), "musq.conf")
-        print(self.config_file)
-        import sys
-        self.config_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
-        self.inputs=None
-        print(self.config_file)
-
         parser=argparse.ArgumentParser("musq demo")
         parser.add_argument("-c", '--config', help='Configuration file', required=False)
         parser.add_argument("-l", '--log', help='Log file', required=False)
         args=parser.parse_args()
+        self.config_file = args.config
         self.load_settings()
+
 
         # print(args.config)
         # raise SystemExit
@@ -69,16 +65,15 @@ class musq():
     def reload_modules(self):
         logging.info("Reloading modules...")
         modules = {}
-        path = "/home/arha/musq/musq_modules/"
-        logging.debug("Modules path %s", path)
-        files = [f for f in listdir(path) if isfile(join(path, f))]
+        logging.debug("Modules path %s", self.mod_path)
+        files = [f for f in listdir(self.mod_path) if isfile(join(self.mod_path, f))]
         for xfile in files:
             if (xfile == 'abstract.py' or xfile == '__init__.py'):
                 continue
             if (xfile[-3:] != ".py"):
                 continue
             module_name = xfile[:-3]
-            if (isfile(path + module_name + ".py")):
+            if (isfile(self.mod_path + module_name + ".py")):
                 modules[module_name] = module_name
 
         result_str = []
@@ -94,8 +89,8 @@ class musq():
         return modules
 
     def load_single_module(self, mod_name):
-        if (mod_name == 'unicorn'):
-            return None
+        #if (mod_name == 'unicorn'):
+        #    return None
         logging.debug("Loading module " + mod_name)
         mod = importlib.import_module("musq_modules." + mod_name)
         a = getattr(mod, 'mm_' + mod_name)
@@ -169,11 +164,36 @@ class musq():
         return a
 
     def load_settings(self):
+        found_config = False
+        if (self.config_file != None):
+            print("Supplied config file = " + self.config_file)
+            if (not found_config and isfile(self.config_file)):
+                found_config=True
+                print("Found config file: " + self.config_file)
+
+        test_file = os.path.join(os.path.expanduser("~"), ".musq.conf")
+        print(test_file)
+        if (not found_config and isfile(test_file)):
+            found_config=True
+            self.config_file=test_file
+            print("Found config file: " + self.config_file)
+
+        test_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
+        self.inputs=None
+        print(test_file)
+        if (not found_config and isfile(test_file)):
+            found_config=True
+            self.config_file=test_file
+            print("Found config file: " + self.config_file)
+
+
         settings = yaml.load(open(self.config_file))
         self.mqtt_server = settings['mqtt_server']
         self.mqtt_port = settings['mqtt_port']
         self.mqtt_client_id = settings['mqtt_client_id']
         self.mqtt_keepalive = settings['mqtt_keepalive']
+
+        self.mod_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq_modules", "")
 
     def get_topic_matches(self, check_topic):
         inputs = self.load_inputs()
