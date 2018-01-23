@@ -3,7 +3,6 @@
 import paho.mqtt.client as mqtt
 import subprocess, os, yaml, shlex, argparse, importlib, logging
 from time import sleep
-
 import pprint
 
 from os import listdir
@@ -70,7 +69,7 @@ class musq():
     def reload_modules(self):
         logging.info("Reloading modules...")
         modules = {}
-        path = "/home/pi/musq/musq_modules/"
+        path = "/home/arha/musq/musq_modules/"
         logging.debug("Modules path %s", path)
         files = [f for f in listdir(path) if isfile(join(path, f))]
         for xfile in files:
@@ -95,6 +94,8 @@ class musq():
         return modules
 
     def load_single_module(self, mod_name):
+        if (mod_name == 'unicorn'):
+            return None
         logging.debug("Loading module " + mod_name)
         mod = importlib.import_module("musq_modules." + mod_name)
         a = getattr(mod, 'mm_' + mod_name)
@@ -113,15 +114,15 @@ class musq():
         self.mqtt_client.publish(topic, payload, 2)
 
     def load_inputs(self, cache=True):
+        # cache = False
         if (cache == True and self.inputs != None):
+            logging.debug("inputs show from cache")
             return self.inputs
 
         a = yaml.load(open(self.config_file))
         a = a['inputs']
 
         inputs = {}
-        # pp = pprint.PrettyPrinter(indent=4)
-        # pp.pprint(a)
 
         for key, i in a.items():
             if ('scripts' in i.keys()):
@@ -132,9 +133,14 @@ class musq():
                 if (i['module'] in self.mod_list):
                     glue_class = input_glue_module(key, i['topic'], self.mod_list[i['module']])
                     self.mod_list[i['module']].link()
+                    self.mod_list[i['module']].set_creator(self)
+
+                    if ('thread' in i.keys()):
+                        logging.info("starting thread for module " + key)
+                        self.mod_list[i['module']].run()
                     inputs[key] = glue_class
                 else:
-                    #logging.error("input '" + key + "' requested non-existent module " + i['module'])
+                    logging.error("input '" + key + "' requested non-existent module " + i['module'])
                     pass
         
         # pp.pprint(inputs)
@@ -200,6 +206,13 @@ class musq():
                 g.loop()
             
         #print("-")
+
+    def bug(self, sender, message):
+        logging.info("Remote call from module thread: %s, message=%s", sender.prefix, message)
+        if (message['type'] == 'pub'):
+            if (message['payload'] != None and message['topic'] != None):
+                self.mqtt_client.publish(message['topic'], message['payload'])
+        
 
 m = musq()
 m.main()
