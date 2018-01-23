@@ -17,3 +17,5 @@ class mm_dummy(abstract.mm_abstract):
         logging.debug("message=" + message.payload.decode('UTF-8'))
         logging.debug("config_line=" + config_line)
 
+    def set_creator(self, creator):
+        self.creator = creator

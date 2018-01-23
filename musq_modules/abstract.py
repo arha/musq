@@ -10,3 +10,6 @@ class mm_abstract:
 
     def test(self):
         print("testing abstract musq module")
+
+    def set_creator(self, creator):
+        self.creator = creator

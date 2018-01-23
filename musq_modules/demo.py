@@ -13,3 +13,6 @@ class mm_demo(abstract.mm_abstract):
 
     def link(self):
         logging.debug("demo linked!")
+
+    def set_creator(self, creator):
+        self.creator = creator

@@ -53,3 +53,6 @@ class mm_unicorn(abstract.mm_abstract):
 
     def link(self):
         logging.debug("unicorn linked!")
+
+    def set_creator(self, creator):
+        self.creator = creator

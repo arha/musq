@@ -28,7 +28,7 @@ class mm_thread_test(abstract.mm_abstract):
             if (ts - self.last_send > 5):
                 message = {}
                 message['type']='pub'
-                message['topic']='/test/module/thread/heartbeat'
+                message['topic']='/test/module/thread/notbeat'
                 message['payload']=str(ts).encode('UTF-8')
                 self.creator.bug(self, message)
                 self.last_send=ts
@@ -38,3 +38,6 @@ class mm_thread_test(abstract.mm_abstract):
         logging.debug("thread start")
         t1 = threading.Thread(target=self.main)
         t1.start()
+
+    def set_creator(self, creator):
+        self.creator = creator
