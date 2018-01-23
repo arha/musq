@@ -92,10 +92,16 @@ class musq():
         #if (mod_name == 'unicorn'):
         #    return None
         logging.debug("Loading module " + mod_name)
-        mod = importlib.import_module("musq_modules." + mod_name)
-        a = getattr(mod, 'mm_' + mod_name)
-        instance = a()
-        return instance
+        mod = None
+        try:
+            mod = importlib.import_module("musq_modules." + mod_name)
+        except:
+            logging.debug("Importing module failed. %s", sys.exc_info())
+            return None
+        else:
+            a = getattr(mod, 'mm_' + mod_name)
+            instance = a()
+            return instance
 
     def on_message(self, client, userdatanp, msg):
         logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
