@@ -1,0 +1,25 @@
+# mqtt_server: "192.168.0.149"
+mqtt_server: "192.168.88.3"
+mqtt_port: 1883
+mqtt_client_id: "musq-default-41239"
+mqtt_keepalive: 20
+
+inputs:
+  'beep-test':
+    topic: /test/beep-simple
+    scripts:
+      -  /usr/bin/beep
+
+  'orangepi-gpio':
+    topic:  /example/opi/#
+    module: opi_one
+    thread: 1
+    delay-temp-reads: 30
+
+  'fork-test':
+    topic: /test/module/thread/#
+    module: thread_test
+    nothread: 1
+    
+    
+outputs:

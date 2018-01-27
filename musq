@@ -61,6 +61,8 @@ class musq():
         logging.debug("Sending subscribsption requests")
         self.mqtt_client.subscribe("/test/#", 0)
         self.mqtt_client.subscribe("test/#", 0)
+        self.mqtt_client.subscribe("/example/#", 0)
+        self.mqtt_client.subscribe("example/#", 0)
 
     def reload_modules(self):
         logging.info("Reloading modules...")
@@ -152,9 +154,10 @@ class musq():
     def load_pipes(self):
         a = yaml.load(open(self.config_file))
         pipes = {}
-        for key, output in a['outputs'].items():
-            if (output['type'] == 'pipe'):
-                pipes[key] = output
+        if (a['outputs'] != None):
+            for key, output in a['outputs'].items():
+                if (output['type'] == 'pipe'):
+                    pipes[key] = output
         return pipes
 
     def load_outputs(self):
