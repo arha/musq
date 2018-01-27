@@ -1,0 +1,104 @@
+# mqtt_server: "192.168.0.149"
+mqtt_server: "192.168.88.3"
+mqtt_port: 1883
+mqtt_client_id: "musq-default-90328"
+mqtt_keepalive: 20
+
+inputs:
+  'beep-test':
+    topic: /test/beep-simple
+    scripts:
+      -  /usr/bin/beep
+
+  'beep-test-2':
+    topic: /test/beep-simple-2
+    scripts: 
+      - /usr/bin/beep -f 880 -l 50
+
+  'beep-with-arg':
+    topic: /test/beep
+    extract_payload: 1
+    scripts:
+      - /usr/bin/beep -f $ -l 100
+
+  'dorel-test':
+    topic: /test/dorel
+    extract_payload: 1
+    payload_escape: $musq_arg$
+    scripts:
+      - /bin/echo dorel $musq_arg$
+
+  'lights-full-path':
+    topic: /test/lights/1230/status
+    scripts: 
+      - "/bin/bash /home/arha/musq/scripts/test-lights.bash 3333"
+      - "/bin/bash /home/arha/musq/scripts/test-lights.bash 6666"
+
+  'lights-partial-expansion':
+    topic: /test/lights/+/status
+    scripts:
+      - /bin/bash /home/arha/musq/scripts/test-lights.bash
+
+  'buttons-full-expansion':
+    topic: /test/buttons/#
+    scripts:
+      - /bin/bash /home/arha/musq/scripts/test-lights.bash
+
+  'example-orange-pi':
+    topic: /test/rpi/gpio/2
+    action: RPI.write $value
+
+  'example-raspberry-pi':
+    topic: /test/rpi/gpio/2
+    action: OPI.write $value
+
+  'example-nanopi-neo':
+    topic: /test/rpi/gpio/2
+    action: NEO.write $value
+
+  'test module':
+    topic: /test/module/demo/#
+    module: demo
+
+  'dummy module':
+    topic: /test/module/dummy/#
+    module: dummy
+
+  'unicorn-module':
+    topic: /test/mod/unicorn/#
+    module: unicorn
+
+  'pizero-module':
+    topic: /example/pizero/#
+    module: pizero
+
+  'fork-test':
+    topic: /test/module/thread/#
+    module: thread_test
+    thread: 1
+    
+    
+outputs:
+  'testpipe':
+    path: '/home/pi/fifo1'
+    type: offpipe
+    topics: 
+      - /test/lol
+    create: 1
+  'testpipe-2':
+    path: '/home/pi/fifo2'
+    type: off
+    topics: 
+      - /test/prog
+    create: 1
+  'testserial':
+    type: 'serial'
+    device: '/dev/ttyS0'
+    baudrate: 9600
+    topics:
+      - /test/prog
+  'example-rpi-button':
+    type: 'rpi-gpio'
+    pin: 17
+    topics:
+      - /test/rpi/button
