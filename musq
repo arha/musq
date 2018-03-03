@@ -28,13 +28,12 @@ class musq():
         self.config_file = args.config
         self.load_settings()
 
-
         # print(args.config)
         # raise SystemExit
         self.log_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.log")
 
         #logging.basicConfig(level=logging.DEBUG, format="[ %(asctime)s ] - [%(pathname)s func:%(funcName)s line:%(lineno)d]: %(message)s")
-       # logging.basicConfig(filename=self.log_file, level=logging.DEBUG, format="[ %(asctime)s ] - [%(pathname)s func:%(funcName)s line:%(lineno)d]: %(message)s")
+        #logging.basicConfig(filename=self.log_file, level=logging.DEBUG, format="[ %(asctime)s ] - [%(pathname)s func:%(funcName)s line:%(lineno)d]: %(message)s")
         #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG, filename=self.log_file)
 
         logFormatter = logging.Formatter("%(asctime)s [%(levelname)-8.8s]  %(message)s")
@@ -52,6 +51,7 @@ class musq():
         logging.info("-------------")
         logging.info('musq starting')
         self.mod_list = self.reload_modules()
+        print(self.mod_list)
 
 
     def on_connect(self, client, userdata, flags, rc):
@@ -103,6 +103,7 @@ class musq():
         else:
             a = getattr(mod, 'mm_' + mod_name)
             instance = a()
+            logging.debug("Instance = %s", instance)
             return instance
 
     def on_message(self, client, userdatanp, msg):
@@ -119,7 +120,7 @@ class musq():
     def load_inputs(self, cache=True):
         # cache = False
         if (cache == True and self.inputs != None):
-            logging.debug("inputs show from cache")
+            #logging.debug("inputs show from cache")
             return self.inputs
 
         a = yaml.load(open(self.config_file))
@@ -213,7 +214,6 @@ class musq():
         return result
             
     def main(self):
-        
         self.mqtt_client = mqtt.Client(self.mqtt_client_id, clean_session=True, protocol=mqtt.MQTTv311)
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_message = self.on_message
