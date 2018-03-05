@@ -105,7 +105,9 @@ class mm_opi_one(abstract.mm_abstract):
                             self.creator.bug(self, message)
 
 
-    def link(self):
+
+    def link(self, creator, settings):
+        super(  mm_opi_one, self).link(creator, settings)
         logging.debug("opi_one linked!")
 
     def set_creator(self, creator):

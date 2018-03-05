@@ -55,7 +55,8 @@ class mm_pizero(abstract.mm_abstract):
         t1 = threading.Thread(target=self.main)
         t1.start()
 
-    def link(self):
+    def link(self, creator, settings):
+        super(  mm_pizero, self).link(creator, settings)
         logging.debug("pizero linked!")
 
     def set_creator(self, creator):

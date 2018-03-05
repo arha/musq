@@ -51,7 +51,8 @@ class mm_unicorn(abstract.mm_abstract):
                     unicorn.set_pixel(x,y,r,g,b)
                     unicorn.show()
 
-    def link(self):
+    def link(self, creator, settings):
+        super(  mm_unicorn, self).link(creator, settings)
         logging.debug("unicorn linked!")
 
     def set_creator(self, creator):
