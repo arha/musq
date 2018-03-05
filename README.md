@@ -42,4 +42,4 @@ Features planned
 * Cross-platform compatible GPIO access
 * Cross-platform peripheral access
 
-<!-- Pushed this file to trigger github's activity thingie 4 -->
+<!-- Pushed this file to trigger github's activity thingie 1 -->
