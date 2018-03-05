@@ -9,12 +9,13 @@ from os import listdir
 import sys
 from os.path import isfile, join
 
+from musq_modules import abstract
+
 
 from glue_classes import input_glue_script, output_glue_pipe, output_glue, input_glue_module
 
 
 class musq():
-
     mqtt_server = "localhost"
     mqtt_port = "1883"
     mqtt_client_id="musq-default"
@@ -56,8 +57,6 @@ class musq():
 
     def on_connect(self, client, userdata, flags, rc):
         logging.debug("Connected with result_code %s", str(rc))
-
-        # client.subscribe("/topic/arha/#", 2)
         logging.debug("Sending subscribsption requests")
         self.mqtt_client.subscribe("/test/#", 0)
         self.mqtt_client.subscribe("test/#", 0)
@@ -136,18 +135,25 @@ class musq():
             if ('module' in i.keys()):
                 if (i['module'] in self.mod_list):
                     # glue_class = input_glue_module(key, i['topic'], self.mod_list[i['module']])
+                    # do not load disabled instances
+                    if (('off' in i) or ('disabled' in i)):
+                        pass
                     module_instance = self.load_single_module(i['module'])
                     glue_class = input_glue_module(key, i['topic'], module_instance)
                     #self.mod_list[i['module']].link()
                     #self.mod_list[i['module']].set_creator(self)
                     #self.mod_list[i['module']].set_settings(i)
-                    module_instance.link()
-                    module_instance.set_creator(self)
-                    module_instance.set_settings(i)
+                    result = module_instance.link(self, i)
+                    # module_instance.set_creator(self)
+                    # module_instance.set_settings(i)
 
                     if ('thread' in i.keys()):
                         logging.info("starting thread for module " + key)
                         self.mod_list[i['module']].run()
+
+                    if (result == False):
+                        logging.error("Module %s failed to instantiate", i['module'])
+                        continue
                     inputs[key] = glue_class
                 else:
                     logging.error("input '" + key + "' requested non-existent module " + i['module'])
@@ -156,7 +162,7 @@ class musq():
         # pp.pprint(inputs)
         self.inputs = inputs
         return inputs
-        
+
 
     def load_pipes(self):
         a = yaml.load(open(self.config_file))
