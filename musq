@@ -83,11 +83,11 @@ class musq():
             result_str.append(key)
             modules[key] = self.load_single_module(key)
 
-        logging.info("Loaded: %s", ", ".join(result_str)) 
+        logging.info("Loaded: %s", ", ".join(result_str))
         #mod = importlib.import_module("musq_modules.dummy")
         #a = getattr(mod, 'mm_dummy')
         #instance = a()
-        
+
         return modules
 
     def load_single_module(self, mod_name):
@@ -101,8 +101,8 @@ class musq():
             logging.debug("Importing module failed. %s", sys.exc_info())
             return None
         else:
-            a = getattr(mod, 'mm_' + mod_name)
-            instance = a()
+            constructor = getattr(mod, 'mm_' + mod_name)
+            instance = constructor()
             logging.debug("Instance = %s", instance)
             return instance
 
@@ -114,11 +114,11 @@ class musq():
             i.execute(msg.topic, msg)
 
     def on_glue_output_pub(self, glue_class, topic, payload):
-        logging.debug("Publish event from glue_class: " + glue_class.name + " to topic " + topic + " with pyload " + payload)
+        logging.debug("Publish event from glue_class: " + glue_class.name + " to topic " + topic + " with payload " + payload)
         self.mqtt_client.publish(topic, payload, 2)
 
     def load_inputs(self, cache=True):
-        # cache = False
+        #cache = False
         if (cache == True and self.inputs != None):
             #logging.debug("inputs show from cache")
             return self.inputs
@@ -135,9 +135,15 @@ class musq():
                 inputs[key] = glue_class;
             if ('module' in i.keys()):
                 if (i['module'] in self.mod_list):
-                    glue_class = input_glue_module(key, i['topic'], self.mod_list[i['module']])
-                    self.mod_list[i['module']].link()
-                    self.mod_list[i['module']].set_creator(self)
+                    # glue_class = input_glue_module(key, i['topic'], self.mod_list[i['module']])
+                    module_instance = self.load_single_module(i['module'])
+                    glue_class = input_glue_module(key, i['topic'], module_instance)
+                    #self.mod_list[i['module']].link()
+                    #self.mod_list[i['module']].set_creator(self)
+                    #self.mod_list[i['module']].set_settings(i)
+                    module_instance.link()
+                    module_instance.set_creator(self)
+                    module_instance.set_settings(i)
 
                     if ('thread' in i.keys()):
                         logging.info("starting thread for module " + key)
@@ -196,7 +202,6 @@ class musq():
             self.config_file=test_file
             print("Found config file: " + self.config_file)
 
-
         settings = yaml.load(open(self.config_file))
         self.mqtt_server = settings['mqtt_server']
         self.mqtt_port = settings['mqtt_port']
@@ -233,7 +238,7 @@ class musq():
             sleep(0.01)
             for key, g in glue.items():
                 g.loop()
-            
+
         #print("-")
 
     def bug(self, sender, message):

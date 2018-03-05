@@ -3,6 +3,7 @@ class mm_abstract:
     name=""
     description=""
     version=""
+    __settings={}
 
 # TODO: does not work for outputs yet
     def __init__(self):
@@ -13,3 +14,6 @@ class mm_abstract:
 
     def set_creator(self, creator):
         self.creator = creator
+
+    def set_settings(self, settings):
+        self.__settings = settings
