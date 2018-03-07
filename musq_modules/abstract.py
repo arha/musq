@@ -1,9 +1,13 @@
+import os,binascii
+
 class mm_abstract:
     prefix=""
     name=""
     description=""
     version=""
-    __settings={}
+    settings={}
+    id=""
+    creator=0
 
 # TODO: does not work for outputs yet
     def __init__(self):
@@ -12,8 +16,7 @@ class mm_abstract:
     def test(self):
         print("testing abstract musq module")
 
-    def set_creator(self, creator):
-        self.creator = creator
-
-    def set_settings(self, settings):
-        self.__settings = settings
+    def link(self, creator, settings):
+        self.id=binascii.b2a_hex(os.urandom(4))
+        self.creator=creator
+        self.settings=settings

@@ -10,7 +10,8 @@ class mm_w215(abstract.mm_abstract):
         self.prefix="w215"
         self.last_send=time.time()
         self.last_send=0
-        self.__sp = SmartPlug('192.168.88.254', '410358')
+
+        self.__sp = ""
 
     def call(self, topic, trigger_topic, message, config_line): 
         #logging.debug("topic=" + topic)
@@ -21,13 +22,35 @@ class mm_w215(abstract.mm_abstract):
         m=message.payload.decode('UTF-8')
 
         if (m  == '0'):
-            self.__sp.state = ON
+            self.sp.state = ON
         elif (m  == '1'):
-            self.__sp.state = OFF
+            self.sp.state = OFF
         return
 
-    def link(self):
+    def link(self, creator, settings):
+        super(  mm_w215, self).link(creator, settings)
+        logging.debug("demo (%s) linked!", self.id)
         logging.debug("*** w215 linked!")
+
+        ip = self.settings['ip']
+        pin = self.settings['pin']
+        #self.__sp = SmartPlug('192.168.88.254', '410358')
+        self.sp = SmartPlug(ip, pin)
+        try:
+            if (self.sp is None):
+                self.sp = None
+        except NameError:
+            logging.info("w215 at %s with pin %s failed to connect", ip, pin)
+            self.sp = None
+            return False
+
+        if (self.sp != None and self.sp._error_report != False):
+            logging.info("w215 at %s with pin %s failed to connect", ip, pin)
+            return False
+
+
+        if (self.sp != None):
+            logging.debug("*** connected to w215 plug at %s", self.settings['ip'])
 
     def main(self):
         # entry point for the thread

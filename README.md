@@ -18,11 +18,13 @@ The following have been tested:
 Standalone 'smart' devices
 --------------------------
 
-Modern 'smart' relay as sensors, such as D-LINK W215 or TP-Link HS100, or the various assortment of glass/door/PIR sensors require 50-100MB APKs to be downloaded; rarely, if ever, have a plain HTTP interface, and usually die when the vendor phases them out. Once you setup one of these to your wifi network, hooking it up to MQTT makes it accessible from anywhere, under any device, through any interface of your choosing, and you do not depend on the provider's servers anymore.
+Modern 'smart' consumer IoT devices, like relays (such as D-LINK W215 or TP-Link HS100), or the various assortment of glass/door/PIR sensors require 50-100MB of bad APKs to use; rarely, if ever, have a plain HTTP interface, and usually die when the vendor phases them out/shuts down the server/files for bankruptcy. 
+
+But if you setup one of these to your local (iot) network, hooking it up to MQTT makes more sense: access it from anywhere, any OS, any interface and cut the dependency to the manufacturer's ecosystem.
 
 The following devices have musq modules available and have been tested:
 
-* D-LINK W215, via [pyw215](https://github.com/LinuxChristian/pyW215). Will need a one-time setup with their dedicated apk to enter ssid/password. SSID/password cannot be entered by connecting to the device in AP mode.
+* D-LINK W215, via [pyw215](https://github.com/LinuxChristian/pyW215). Needs: one-time setup with their dedicated apk to enter ssid/password (SSID/password cannot be entered by connecting to the device in AP mode)
 
 
 Hats and modules supported

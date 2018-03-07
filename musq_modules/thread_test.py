@@ -17,7 +17,8 @@ class mm_thread_test(abstract.mm_abstract):
         logging.debug("message=" + message.payload.decode('UTF-8'))
         logging.debug("config_line=" + config_line)
 
-    def link(self):
+    def link(self, creator, settings):
+        super(  mm_thread_test, self).link(creator, settings)
         logging.debug("thread_demo linked!")
 
     def main(self):

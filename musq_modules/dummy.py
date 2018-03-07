@@ -8,7 +8,8 @@ class mm_dummy(abstract.mm_abstract):
     def test(self): 
         pass
 
-    def link(self):
+    def link(self, creator, settings):
+        super(  mm_dummy, self).link(creator, settings)
         logging.debug("dummy linked!")
 
     def call(self, topic, trigger_topic, message, config_line): 
