@@ -14,17 +14,13 @@ class mm_w215(abstract.mm_abstract):
         self.__sp = ""
 
     def call(self, topic, trigger_topic, message, config_line): 
-        #logging.debug("topic=" + topic)
-        #logging.debug("trigger_topic=" + trigger_topic)
-        #logging.debug("message=" + message.payload.decode('UTF-8'))
-        #logging.debug("config_line=" + config_line)
         
         m=message.payload.decode('UTF-8')
 
         if (m  == '0'):
-            self.sp.state = ON
-        elif (m  == '1'):
             self.sp.state = OFF
+        elif (m  == '1'):
+            self.sp.state = ON
         return
 
     def link(self, creator, settings):
@@ -32,9 +28,16 @@ class mm_w215(abstract.mm_abstract):
         logging.debug("demo (%s) linked!", self.id)
         logging.debug("*** w215 linked!")
 
-        ip = self.settings['ip']
-        pin = self.settings['pin']
-        #self.__sp = SmartPlug('192.168.88.254', '410358')
+        ip = self.settings.get("ip")
+        pin = self.settings.get("pin")
+        if (ip == None or pin == None):
+            if (ip == None):
+                logging.info("w215 is missing ip")
+            if (pin == None):
+                logging.info("w215 is missing pin")
+            self.sp = None
+            return False
+
         self.sp = SmartPlug(ip, pin)
         try:
             if (self.sp is None):
