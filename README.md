@@ -24,8 +24,8 @@ But if you setup one of these to your local (iot) network, hooking it up to MQTT
 
 The following devices have musq modules available and have been tested:
 
-* D-LINK W215, via [pyw215](https://github.com/LinuxChristian/pyW215). Needs: one-time setup with their dedicated apk to enter ssid/password (SSID/password cannot be entered by connecting to the device in AP mode)
-* HS-100, via [pyHS100](https://github.com/GadgetReactor/pyHS100) by gadget reactor. Needs: one time setup
+* D-LINK W215, via [pyw215](https://github.com/LinuxChristian/pyW215) by LinuxChristian. Needs: one-time setup with their dedicated apk to enter ssid/password (SSID/password cannot be entered by connecting to the device in AP mode); will also need installing the python library `pip3 install pyw215`
+* HS-100, via [pyHS100](https://github.com/GadgetReactor/pyHS100) by GadgetReactor. Needs: one time setup; will also need installing the python library `pip3 install pyHS100`
 
 
 Hats and modules supported

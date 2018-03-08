@@ -14,37 +14,35 @@ class mm_hs100(abstract.mm_abstract):
         self.__sp = ""
 
     def call(self, topic, trigger_topic, message, config_line): 
-        #logging.debug("topic=" + topic)
-        #logging.debug("trigger_topic=" + trigger_topic)
-        #logging.debug("message=" + message.payload.decode('UTF-8'))
-        #logging.debug("config_line=" + config_line)
-        
         m=message.payload.decode('UTF-8')
 
         if (m  == '0'):
-            self.sp.state = ON
+            self.sp.turn_on()
         elif (m  == '1'):
-            self.sp.state = OFF
+            self.sp.turn_off()
         return
 
     def link(self, creator, settings):
         super(  mm_w215, self).link(creator, settings)
         logging.debug("*** hs100 linked!")
 
-        ip = self.settings['ip']
-        pin = self.settings['pin']
-        #self.__sp = SmartPlug('192.168.88.254', '410358')
-        self.sp = SmartPlug(ip, pin)
+        ip = self.settings.get("ip")
+        if (ip == None):
+            logging.info("hs100 at %s failed to connect", ip)
+            self.sp = None
+            return False
+
+        self.sp = SmartPlug(ip)
         try:
             if (self.sp is None):
                 self.sp = None
         except NameError:
-            logging.info("w215 at %s with pin %s failed to connect", ip, pin)
+            logging.info("hs100 at %s failed to connect", ip)
             self.sp = None
             return False
 
         if (self.sp != None and self.sp._error_report != False):
-            logging.info("w215 at %s with pin %s failed to connect", ip, pin)
+            logging.info("hs100 at %s failed to connect", ip)
             return False
 
 
