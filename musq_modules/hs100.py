@@ -23,7 +23,7 @@ class mm_hs100(abstract.mm_abstract):
         return
 
     def link(self, creator, settings):
-        super(  mm_w215, self).link(creator, settings)
+        super(  mm_hs100, self).link(creator, settings)
         logging.debug("*** hs100 linked!")
 
         ip = self.settings.get("ip")
@@ -41,13 +41,8 @@ class mm_hs100(abstract.mm_abstract):
             self.sp = None
             return False
 
-        if (self.sp != None and self.sp._error_report != False):
-            logging.info("hs100 at %s failed to connect", ip)
-            return False
-
-
         if (self.sp != None):
-            logging.debug("*** connected to w215 plug at %s", self.settings['ip'])
+            logging.debug("*** connected to hs100 plug at %s", self.settings['ip'])
 
     def main(self):
         # entry point for the thread
