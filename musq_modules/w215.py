@@ -38,7 +38,7 @@ class mm_w215(abstract.mm_abstract):
             self.sp = None
             return False
 
-        self.sp = SmartPlug(ip, pin)
+        self.sp = SmartPlug(ip, str(pin))
         try:
             if (self.sp is None):
                 self.sp = None
