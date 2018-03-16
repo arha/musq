@@ -26,13 +26,20 @@ pip3 install paho-mqtt pyyaml
 ```
 
 Extended stuff (varies depending on what you want)
-# smart devices
-pip3 install pyHS100 pyw215 
 
-# unicorn hat
+* 'Smart' devices
+```
+pip3 install pyHS100 pyw215 
+```
+
+* Pimoroni's unicorn hat
+
+```
 apt-get install python3-pip python3-dev
 pip3 install unicornhat
 ```
+
+
 
 # Standalone 'smart' devices
 
