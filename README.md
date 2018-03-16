@@ -18,7 +18,7 @@ The following have been tested:
 
 ## Prerequirements
 
-* Dependencies
+### Dependencies
 
 ```
 apt-get install python3-pip
@@ -27,19 +27,31 @@ pip3 install paho-mqtt pyyaml
 
 Extended stuff (varies depending on what you want)
 
-* 'Smart' devices
+### 'Smart' devices
 ```
 pip3 install pyHS100 pyw215 
 ```
 
-* Pimoroni's unicorn hat
+### Pimoroni's unicorn hat
 
 ```
 apt-get install python3-pip python3-dev
 pip3 install unicornhat
 ```
 
+## Installation
 
+Either clone the repo ```git clone https://github.com/arha/musq``` or download the [master zip](https://github.com/arha/musq/archive/master.zip). With the provided config file, sending a message to ```/test/beep-simple``` will call ```/usr/bin/beep``` and messages to ```/test/module/demo/#``` should output some debug data.
+
+Run musq, ```python3 musq``` or simply ```./musq```.
+
+### Messing around
+
+Once that works, setup the logging module (```module: log_file```, needs a ```filename``` and ```topic``` argument) and see what appears. Send a few messages, then configure your own scripts.
+
+The ```pizero``` module loaded on a RPi Zero will publish its internal temperature to ```/example/pizero/temperature```, while writing 1 or 0 to its subscribed topic followed by led (```/this/is/your/topic/led```) will trigger the onboard led.
+
+Orange PIs can have stuff written to ```/example/opi/gpio/action/PG7``` (where action can be read, write, output, pullup), or to /example/opi/led/red (or green) to mess with its leds. The OPi will publish its internal temperature to ```/example/opi/temperature/soc```
 
 # Standalone 'smart' devices
 
@@ -65,6 +77,11 @@ Planned:
 * Full RPi v1 and RPI v3
 * NanoPi NEO
 * Support for hardware libs for peripheral access (I^2C, SPI, serial links...)
+* MIDI to MQTT
+* Routing (copy messages to/from topics, check for feedback loops)
+* Log to file
+* Log to databases (MySQL, Postgres, MSSQL, db2) and CouchDB/MongoDB
+* DynamoDB, AWS IoT core
 
 Features planned
 ----------------
