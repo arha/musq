@@ -45,12 +45,14 @@ pip3 install unicornhat
 
 Modern 'smart' consumer IoT devices, like relays (such as D-LINK W215 or TP-Link HS100), or the various assortment of glass/door/PIR sensors require 50-100MB of bad APKs to use; rarely, if ever, have a plain HTTP interface, and usually die when the vendor phases them out/shuts down the server/files for bankruptcy. 
 
-But if you setup one of these to your local (iot) network, hooking it up to MQTT makes more sense: access it from anywhere, any OS, any interface and cut the dependency to the manufacturer's ecosystem.
+Once you go to the trouble of setting it up, the vendor's APK is useless; hooking the device up to MQTT makes much more sense: access it from anywhere, any OS, any interface and cut the dependency to the manufacturer's ecosystem.
 
 The following devices have musq modules available and have been tested:
 
 * D-LINK W215, via [pyw215](https://github.com/LinuxChristian/pyW215) by LinuxChristian. Needs: one-time setup with their dedicated APK to enter ssid/password (SSID/password cannot be entered by connecting to the device in AP mode); will also need installing the python library `pip3 install pyw215`
 * HS-100, via [pyHS100](https://github.com/GadgetReactor/pyHS100) by GadgetReactor. Needs: one time setup from APK; will also need installing the python library `pip3 install pyHS100`
+
+Any 'smart' device that acts as an output can be connected to mqtt via musq if its protocol has been reversed-engineered, and is callable by some sort of script - simply call the script from musq.
 
 
 Hats and modules supported
