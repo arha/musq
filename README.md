@@ -82,6 +82,7 @@ Planned:
 * Log to file
 * Log to databases (MySQL, Postgres, MSSQL, db2) and CouchDB/MongoDB
 * DynamoDB, AWS IoT core
+* Write to IR or 433/866 MHz RF stuff with dumb dongle (audio out)
 
 Features planned
 ----------------
