@@ -16,9 +16,9 @@ class mm_hs100(abstract.mm_abstract):
     def call(self, topic, trigger_topic, message, config_line): 
         m=message.payload.decode('UTF-8')
 
-        if (m  == '0'):
+        if (m  == '1'):
             self.sp.turn_on()
-        elif (m  == '1'):
+        elif (m  == '0'):
             self.sp.turn_off()
         return
 
