@@ -36,7 +36,7 @@ class mm_pizero(abstract.mm_abstract):
             sleep (1)
             ts = time.time()
             if (ts - self.last_send > 10):
-                logging.debug("opi_one thread: reading temperature")
+                logging.debug("pizero thread: reading temperature")
                 data = "-1" 
                 # /sys/devices/virtual/thermal/thermal_zone{0,1}/temp
                 with open("/sys/class/thermal/thermal_zone0/temp", "r") as file:

@@ -12,7 +12,6 @@ class mm_demo(abstract.mm_abstract):
         logging.debug("message=" + message.payload.decode('UTF-8'))
         logging.debug("config_line=" + config_line)
         logging.debug("id = %s", self.__id)
-        logging.debug("ip = %s", self.__settings['ip'])
 
     def link(self, creator, settings):
         super(  mm_demo, self).link(creator, settings)
