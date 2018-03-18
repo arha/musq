@@ -74,15 +74,23 @@ Hats and modules supported
 
 Planned:
 --------
-* Full RPi v1 and RPI v3
-* NanoPi NEO
-* Support for hardware libs for peripheral access (I^2C, SPI, serial links...)
-* MIDI to MQTT
-* Routing (copy messages to/from topics, check for feedback loops)
-* Log to file
-* Log to databases (MySQL, Postgres, MSSQL, db2) and CouchDB/MongoDB
-* DynamoDB, AWS IoT core
-* Write to IR or 433/866 MHz RF stuff with dumb dongle (audio out)
+
+# Boards 
+- [ ] Full RPi v1 and RPI v3
+- [ ] NanoPi NEO
+- [X] OrangePi
+- [X] Onion Omega2
+
+# Hardware and HAL features
+- [ ] Support for hardware libs for peripheral access (I^2C, SPI, serial links...)
+- [ ] MIDI to MQTT
+
+# Application features
+- [ ] Routing (copy messages to/from topics, check for feedback loops)
+- [X] Log to file
+- [ ] Log to databases (MySQL, Postgres, MSSQL, db2) and CouchDB/MongoDB
+- [ ] DynamoDB, AWS IoT core
+- [X] Write to IR or 433/866 MHz RF stuff with dumb dongle (audio out), works via script+aplay
 
 Features planned
 ----------------
