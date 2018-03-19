@@ -15,6 +15,9 @@ The following have been tested:
 * Vanilla x64 debian9
 * Raspberry Pi Zero, Unicorn HAT
 * Orange PI, GPIO only
+* Omega Onion2
+
+Mostly with python3, but python2 should work well.
 
 ## Prerequirements
 
@@ -66,35 +69,29 @@ The following devices have musq modules available and have been tested:
 
 Any 'smart' device that acts as an output can be connected to mqtt via musq if its protocol has been reversed-engineered, and is callable by some sort of script - simply call the script from musq.
 
-
-Hats and modules supported
---------------------------
+# Hats and modules supported
 
 * Pimoroni Unicorn HAT (Standard, 8x8) - GPIO
 
-Planned:
---------
+# To-Do
 
-# Boards 
+### Boards 
 - [ ] Full RPi v1 and RPI v3
 - [ ] NanoPi NEO
 - [X] OrangePi
 - [X] Onion Omega2
 
-# Hardware and HAL features
+### Hardware and HAL features
 - [ ] Support for hardware libs for peripheral access (I^2C, SPI, serial links...)
 - [ ] MIDI to MQTT
+- [ ] Cross-platform compatible GPIO access
+- [ ] Cross-platform peripheral access
 
-# Application features
+### Application features
 - [ ] Routing (copy messages to/from topics, check for feedback loops)
 - [X] Log to file
 - [ ] Log to databases (MySQL, Postgres, MSSQL, db2) and CouchDB/MongoDB
 - [ ] DynamoDB, AWS IoT core
 - [X] Write to IR or 433/866 MHz RF stuff with dumb dongle (audio out), works via script+aplay
-
-Features planned
-----------------
-* Cross-platform compatible GPIO access
-* Cross-platform peripheral access
 
 <!-- Pushed this file to trigger github's activity thingie 2 -->
