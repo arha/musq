@@ -25,8 +25,7 @@ class mm_w215(abstract.mm_abstract):
 
     def link(self, creator, settings):
         super(  mm_w215, self).link(creator, settings)
-        logging.debug("demo (%s) linked!", self.id)
-        logging.debug("*** w215 linked!")
+        logging.debug("*** w215 (%s) linked!", self.my_id)
 
         ip = self.settings.get("ip")
         pin = self.settings.get("pin")

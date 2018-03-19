@@ -21,7 +21,7 @@ class mm_abstract:
         self.my_id=self.get_id()
         self.creator=creator
         self.settings=settings
-        print("*** LINKING id=%s, object=%s, creator=%s, settings=%s" % (self.my_id, self, self.creator, self.settings))
+        # logger.debug("*** LINKING id=%s, object=%s, creator=%s, settings=%s" % (self.my_id, self, self.creator, self.settings))
 
     def get_id(self):
         my_id=( "%08X" % (id(self)))

@@ -5,7 +5,6 @@ class mm_demo(abstract.mm_abstract):
     def __init__(self):
         prefix="demo"
 
-
     def call(self, topic, trigger_topic, message, config_line):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
