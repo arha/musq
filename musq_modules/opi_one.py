@@ -9,16 +9,14 @@ from pyA20.gpio import gpio
 from pyA20.gpio import port
 
 class mm_opi_one(abstract.mm_abstract):
-
-
     def __init__(self):
-        prefix="opi_one"
+        self.prefix="opi_one"
         self.last_send = 0
         gpio.init()
-        gpio.setcfg(port.PG7, gpio.INPUT)
-        gpio.pullup(port.PG7, gpio.PULLUP)
-        gpio.setcfg(port.PG6, gpio.INPUT)
-        gpio.pullup(port.PG6, gpio.PULLUP)
+        # gpio.setcfg(port.PG7, gpio.INPUT)
+        # gpio.pullup(port.PG7, gpio.PULLUP)
+        # gpio.setcfg(port.PG6, gpio.INPUT)
+        # gpio.pullup(port.PG6, gpio.PULLUP)
         self.__load_pinmap()
 
     def __load_pinmap(self):
@@ -110,16 +108,14 @@ class mm_opi_one(abstract.mm_abstract):
         super(  mm_opi_one, self).link(creator, settings)
         logging.debug("opi_one linked!")
 
-    def set_creator(self, creator):
-        self.creator = creator
-
     def main(self):
         # entry point for the thread
         while True:
             sleep (1)
             ts = time.time()
-            if (ts - self.last_send > 120):
+            if (ts - self.last_send > self.thread_sleep):
                 logging.debug("opi_one thread: reading temperature")
+                logging.debug(self)
                 data = "-1" 
                 # /sys/devices/virtual/thermal/thermal_zone{0,1}/temp
                 with open("/etc/armbianmonitor/datasources/soctemp", "r") as file:
@@ -128,14 +124,20 @@ class mm_opi_one(abstract.mm_abstract):
                 message['type']='pub'
                 message['topic']='/example/opi/temperature/soc'
                 message['payload']=str(data).encode('UTF-8')
+                print(self)
+                print(self.creator)
+                print(self.settings)
                 self.creator.bug(self, message)
                 self.last_send=ts
         logging.debug("Thread finished on thread_test")
 
     def run(self):
-        logging.debug("thread start")
+        if (self.creator == -1):
+            logging.error("*** Error in %s (id=%s), object not linked, refusing thread start." % (self.prefix, self.my_id))
+            return
+
+        print(self.settings)
+        self.thread_sleep = int(self.settings.get("thread_sleep")) or 10
+        logging.debug("thread start with thread_sleep=%s (id=%s)" % (self.thread_sleep, self.my_id))
         t1 = threading.Thread(target=self.main)
         t1.start()
-
-    def set_creator(self, creator):
-        self.creator = creator
