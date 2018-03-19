@@ -1,17 +1,12 @@
 #!/usr/bin/python3 
-
-import paho.mqtt.client as mqtt
-import subprocess, os, yaml, shlex, argparse, importlib, logging
+import subprocess, os, yaml, shlex, argparse, importlib, logging, sys
 from time import sleep
-import pprint
+import paho.mqtt.client as mqtt
 
 from os import listdir
-import sys
 from os.path import isfile, join
 
 from musq_modules import abstract
-
-
 from glue_classes import input_glue_script, output_glue_pipe, output_glue, input_glue_module
 
 
@@ -52,16 +47,24 @@ class musq():
         logging.info("-------------")
         logging.info('musq starting')
         self.mod_list = self.reload_modules()
-        print(self.mod_list)
+        # print(self.mod_list)
 
 
     def on_connect(self, client, userdata, flags, rc):
         logging.debug("Connected with result_code %s", str(rc))
         logging.debug("Sending subscribsption requests")
-        self.mqtt_client.subscribe("/test/#", 0)
-        self.mqtt_client.subscribe("test/#", 0)
-        self.mqtt_client.subscribe("/example/#", 0)
-        self.mqtt_client.subscribe("example/#", 0)
+
+        if (self.subscriptions == None):
+            logging.warning("Warning, no subscriptions defined in musq.conf, subscribing to #")
+            self.mqtt_client.subscribe("#")
+        else:
+            for crt_sub in self.subscriptions:
+                logging.debug("Subscribing to " + crt_sub)
+                self.mqtt_client.subscribe(crt_sub)
+        # self.mqtt_client.subscribe("/test/#", 0)
+        # self.mqtt_client.subscribe("test/#", 0)
+        # self.mqtt_client.subscribe("/example/#", 0)
+        # self.mqtt_client.subscribe("example/#", 0)
 
     def reload_modules(self):
         logging.info("Reloading modules...")
@@ -83,26 +86,23 @@ class musq():
             modules[key] = self.load_single_module(key)
 
         logging.info("Loaded: %s", ", ".join(result_str))
-        #mod = importlib.import_module("musq_modules.dummy")
-        #a = getattr(mod, 'mm_dummy')
-        #instance = a()
 
         return modules
 
     def load_single_module(self, mod_name):
         #if (mod_name == 'unicorn'):
         #    return None
-        logging.debug("Loading module " + mod_name)
+        # logging.debug("Loading module " + mod_name)
         mod = None
         try:
             mod = importlib.import_module("musq_modules." + mod_name)
         except:
-            logging.debug("Importing module failed. %s", sys.exc_info())
+            logging.debug("Loading module %s, failed: %s", mod_name, sys.exc_info())
             return None
         else:
             constructor = getattr(mod, 'mm_' + mod_name)
             instance = constructor()
-            logging.debug("Instance = %s", instance)
+            logging.debug("Loading module %s, id=%s, instance = %s", mod_name, instance.get_id(), instance)
             return instance
 
     def on_message(self, client, userdatanp, msg):
@@ -137,6 +137,7 @@ class musq():
                     # glue_class = input_glue_module(key, i['topic'], self.mod_list[i['module']])
                     # do not load disabled instances
                     if (('off' in i) or ('disabled' in i)):
+                        logging.debug("Module disabled")
                         pass
                     module_instance = self.load_single_module(i['module'])
                     glue_class = input_glue_module(key, i['topic'], module_instance)
@@ -149,7 +150,8 @@ class musq():
 
                     if ('thread' in i.keys()):
                         logging.info("starting thread for module " + key)
-                        self.mod_list[i['module']].run()
+                        # self.mod_list[i['module']].run()
+                        module_instance.run()
 
                     if (result == False):
                         logging.error("Module %s failed to instantiate", i['module'])
@@ -158,8 +160,6 @@ class musq():
                 else:
                     logging.error("input '" + key + "' requested non-existent module " + i['module'])
                     pass
-        
-        # pp.pprint(inputs)
         self.inputs = inputs
         return inputs
 
@@ -191,14 +191,14 @@ class musq():
             print("Supplied config file = " + self.config_file)
             if (not found_config and isfile(self.config_file)):
                 found_config=True
-                print("Found config file: " + self.config_file)
+                print("Using config file: " + self.config_file)
 
         test_file = os.path.join(os.path.expanduser("~"), ".musq.conf")
         print(test_file)
         if (not found_config and isfile(test_file)):
             found_config=True
             self.config_file=test_file
-            print("Found config file: " + self.config_file)
+            print("Using config file: " + self.config_file)
 
         test_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
         self.inputs=None
@@ -206,15 +206,16 @@ class musq():
         if (not found_config and isfile(test_file)):
             found_config=True
             self.config_file=test_file
-            print("Found config file: " + self.config_file)
+            print("Using config file: " + self.config_file)
 
         settings = yaml.load(open(self.config_file))
         self.mqtt_server = settings['mqtt_server']
         self.mqtt_port = settings['mqtt_port']
         self.mqtt_client_id = settings['mqtt_client_id']
         self.mqtt_keepalive = settings['mqtt_keepalive']
-
         self.mod_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq_modules", "")
+        self.subscriptions = settings['subscriptions']
+        print(self.subscriptions)
 
     def get_topic_matches(self, check_topic):
         inputs = self.load_inputs()
@@ -223,6 +224,12 @@ class musq():
             if self.topic_matches_sub(key, check_topic):
                 result[key] = value
         return result
+
+    def bug(self, sender, message):
+        logging.info("Remote call from module thread: %s, message=%s", sender.prefix, message)
+        if (message['type'] == 'pub'):
+            if (message['payload'] != None and message['topic'] != None):
+                self.mqtt_client.publish(message['topic'], message['payload'])
             
     def main(self):
         self.mqtt_client = mqtt.Client(self.mqtt_client_id, clean_session=True, protocol=mqtt.MQTTv311)
@@ -239,22 +246,12 @@ class musq():
             glue_class.set_creator(self)
             glue[key] = glue_class
 
-        #print(glue)
         while True:
             sleep(0.01)
             for key, g in glue.items():
                 g.loop()
 
-        #print("-")
-
-    def bug(self, sender, message):
-        logging.info("Remote call from module thread: %s, message=%s", sender.prefix, message)
-        if (message['type'] == 'pub'):
-            if (message['payload'] != None and message['topic'] != None):
-                self.mqtt_client.publish(message['topic'], message['payload'])
-        
-
-m = musq()
+m=musq()
 m.main()
         
 
