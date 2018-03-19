@@ -6,9 +6,9 @@ Easily configurable, modular and easily extendable with either shell scripts or 
 
 musq is mqtt glue.
 
+-----------------
 
 ## What's supported?
------------------
 
 The following have been tested:
 * RPI v3 model B
@@ -19,7 +19,7 @@ The following have been tested:
 
 Mostly with python3, but python2 should work well.
 
-## Prerequirements
+# Prerequirements
 
 ### Dependencies
 
@@ -42,13 +42,13 @@ apt-get install python3-pip python3-dev
 pip3 install unicornhat
 ```
 
-## Installation
+# Installation
 
 Either clone the repo ```git clone https://github.com/arha/musq``` or download the [master zip](https://github.com/arha/musq/archive/master.zip). With the provided config file, sending a message to ```/test/beep-simple``` will call ```/usr/bin/beep``` and messages to ```/test/module/demo/#``` should output some debug data.
 
 Run musq, ```python3 musq``` or simply ```./musq```.
 
-### Messing around
+## Messing around
 
 Once that works, setup the logging module (```module: log_file```, needs a ```filename``` and ```topic``` argument) and see what appears. Send a few messages, then configure your own scripts.
 
@@ -73,25 +73,27 @@ Any 'smart' device that acts as an output can be connected to mqtt via musq if i
 
 * Pimoroni Unicorn HAT (Standard, 8x8) - GPIO
 
-# To-Do
+# Wishlist
 
-### Boards 
+## Boards 
 - [ ] Full RPi v1 and RPI v3
 - [ ] NanoPi NEO
 - [X] OrangePi
 - [X] Onion Omega2
 
-### Hardware and HAL features
+## Hardware and HAL features
 - [ ] Support for hardware libs for peripheral access (I^2C, SPI, serial links...)
 - [ ] MIDI to MQTT
 - [ ] Cross-platform compatible GPIO access
 - [ ] Cross-platform peripheral access
 
-### Application features
+## Application features
+- [ ] Allow configuration of subscriptions, autoguess from modules
 - [ ] Routing (copy messages to/from topics, check for feedback loops)
 - [X] Log to file
 - [ ] Log to databases (MySQL, Postgres, MSSQL, db2) and CouchDB/MongoDB
 - [ ] DynamoDB, AWS IoT core
+- [ ] Blynk seems popular
 - [X] Write to IR or 433/866 MHz RF stuff with dumb dongle (audio out), works via script+aplay
 
 <!-- Pushed this file to trigger github's activity thingie 2 -->
