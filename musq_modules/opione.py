@@ -7,7 +7,7 @@ from time import sleep
 from pyA20.gpio import gpio
 from pyA20.gpio import port
 
-class mm_opi_one(abstract.mm_abstract):
+class mm_opione(abstract.mm_abstract):
     def __init__(self):
         self.prefix="opione"
         self.last_send = 0
@@ -150,8 +150,8 @@ class mm_opi_one(abstract.mm_abstract):
             logging.debug("Set pin %s to weak hi (input, pullup)" % (pin_name))
 
     def link(self, creator, settings):
-        super(  mm_opi_one, self).link(creator, settings)
-        logging.debug("opi_one linked!")
+        super(  mm_opione, self).link(creator, settings)
+        logging.debug("opione linked!")
         self.creator.get_env_data() 
 
         self.autotopic="/musq/dev/" + self.creator.musq_id
@@ -176,14 +176,15 @@ class mm_opi_one(abstract.mm_abstract):
     
     def delete_autotopic(self):
         topics = ['time_init', 'serial_number', 'hostname', 'uptime', 'cpu', 'hardware', 'ip', 'temp', 'temp1', 'temp2', 'gpio/target', 'gpio/write', 'gpio/read']
+        # for key, val in self.pinmap.items():
+        #    topics.append('GPIO/' + key)
         for m in topics:
             self.creator.self_publish(self, '', m, qos=2, retain=True)
     
     def signal_exit(self):
-        super(  mm_opi_one, self).signal_exit()
+        super(  mm_opione, self).signal_exit()
         logging.debug("removing autotopic")
-        for i in range(1,5):
-            self.delete_autotopic()
+        self.delete_autotopic()
 
     def main(self):
         # entry point for the thread
@@ -192,7 +193,7 @@ class mm_opi_one(abstract.mm_abstract):
             sleep (1)
             ts = time.time()
             if (ts - self.last_send > self.thread_sleep):
-                logging.debug("opi_one thread: spin busy loop thread")
+                logging.debug("opione thread: spin busy loop thread")
                 data = "-1" 
                 with open("/etc/armbianmonitor/datasources/soctemp", "r") as file:
                     data=file.readline()
