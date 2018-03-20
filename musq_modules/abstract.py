@@ -1,4 +1,5 @@
 import os,binascii
+import logging
 
 class mm_abstract:
     prefix=""
@@ -26,3 +27,6 @@ class mm_abstract:
     def get_id(self):
         my_id=( "%08X" % (id(self)))
         return my_id
+
+    def signal_exit(self):
+        logging.debug("Requesting graceful exit for %s id=%s" % (self.prefix, self.my_id))

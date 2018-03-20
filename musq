@@ -1,6 +1,7 @@
 #!/usr/bin/python3 
-import subprocess, os, yaml, shlex, argparse, importlib, logging, sys
-from time import sleep
+import subprocess, os, yaml, shlex, argparse, importlib, logging, sys, time, signal, re
+import socket, fcntl, struct    # needed to get the IPs of this device
+import hashlib                  # with which we create a short hash to identify ourselves in /musq/heartbeat
 import paho.mqtt.client as mqtt
 
 from os import listdir
@@ -15,6 +16,8 @@ class musq():
     mqtt_port = "1883"
     mqtt_client_id="musq-default"
     mqtt_keepalive=12
+    platform_module="opione"
+    kill_heartbeat_id = None   # this is used to trace when the heartbeat topic has been killed, and then safely shut down
 
     def __init__(self):
         parser=argparse.ArgumentParser("musq demo")
@@ -23,7 +26,6 @@ class musq():
         args=parser.parse_args()
         self.config_file = args.config
         self.load_settings()
-
         # print(args.config)
         # raise SystemExit
         self.log_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.log")
@@ -34,21 +36,34 @@ class musq():
 
         logFormatter = logging.Formatter("%(asctime)s [%(levelname)-8.8s]  %(message)s")
         rootLogger = logging.getLogger()
-
         fileHandler = logging.FileHandler(self.log_file)
         fileHandler.setFormatter(logFormatter)
         rootLogger.addHandler(fileHandler)
-        rootLogger.setLevel(logging.DEBUG)
-
+        rootLogger.setLevel(logging.INFO)
         consoleHandler = logging.StreamHandler(sys.stdout)
         consoleHandler.setFormatter(logFormatter)
         rootLogger.addHandler(consoleHandler)
 
+        self.musq_id = self.generate_musq_id().strip()
+
         logging.info("-------------")
         logging.info('musq starting')
+
         self.mod_list = self.reload_modules()
         # print(self.mod_list)
 
+
+    def on_publish(self, client, userdata, mid):
+        if (self.killer.kill_now):
+            if (mid == self.kill_heartbeat_id):
+                logging.info("Succesfully sent kill heartbeat message for musq id %s" % (self.musq_id))
+                self.kill_heartbeat_id='done'
+
+    def on_disconnect(self, client, userdata, rc):
+        if rc != 0:
+            logging.info("Unexpected disconnection.")
+        else:
+            logging.info("Disconnected.")
 
     def on_connect(self, client, userdata, flags, rc):
         logging.debug("Connected with result_code %s", str(rc))
@@ -61,10 +76,18 @@ class musq():
             for crt_sub in self.subscriptions:
                 logging.debug("Subscribing to " + crt_sub)
                 self.mqtt_client.subscribe(crt_sub)
-        # self.mqtt_client.subscribe("/test/#", 0)
-        # self.mqtt_client.subscribe("test/#", 0)
-        # self.mqtt_client.subscribe("/example/#", 0)
-        # self.mqtt_client.subscribe("example/#", 0)
+
+        self.mqtt_client.subscribe("/musq/dev/" + self.musq_id + "/#", 0)
+        self.load_inputs()
+        self.heartbeat()
+
+    def heartbeat(self):
+        self.raw_publish(self, self.formatted_time(), "/musq/heartbeat/" + self.musq_id, 2, True)
+
+    def kill_heartbeat(self):
+        if (self.kill_heartbeat_id == None):
+            val = self.raw_publish(self, '', "/musq/heartbeat/" + self.musq_id, 2, True)
+            self.kill_heartbeat_id = val[1]
 
     def reload_modules(self):
         logging.info("Reloading modules...")
@@ -106,11 +129,18 @@ class musq():
             return instance
 
     def on_message(self, client, userdatanp, msg):
+        if(self.killer.kill_now):
+            return
         logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
 
         inputs = self.load_inputs()
         for key, i in inputs.items():
             i.execute(msg.topic, msg)
+
+    def prepare_kill(self):
+        inputs = self.load_inputs()
+        for key, i in inputs.items():
+            i.module.signal_exit()
 
     def on_glue_output_pub(self, glue_class, topic, payload):
         logging.debug("Publish event from glue_class: " + glue_class.name + " to topic " + topic + " with payload " + payload)
@@ -191,22 +221,21 @@ class musq():
             print("Supplied config file = " + self.config_file)
             if (not found_config and isfile(self.config_file)):
                 found_config=True
-                print("Using config file: " + self.config_file)
 
         test_file = os.path.join(os.path.expanduser("~"), ".musq.conf")
-        print(test_file)
+        # print(test_file)
         if (not found_config and isfile(test_file)):
             found_config=True
             self.config_file=test_file
-            print("Using config file: " + self.config_file)
 
         test_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
         self.inputs=None
-        print(test_file)
+        # print(test_file)
         if (not found_config and isfile(test_file)):
             found_config=True
             self.config_file=test_file
-            print("Using config file: " + self.config_file)
+
+        print("Using config file: " + self.config_file)
 
         settings = yaml.load(open(self.config_file))
         self.mqtt_server = settings['mqtt_server']
@@ -215,7 +244,8 @@ class musq():
         self.mqtt_keepalive = settings['mqtt_keepalive']
         self.mod_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq_modules", "")
         self.subscriptions = settings['subscriptions']
-        print(self.subscriptions)
+    
+        self.settings = settings
 
     def get_topic_matches(self, check_topic):
         inputs = self.load_inputs()
@@ -226,15 +256,168 @@ class musq():
         return result
 
     def bug(self, sender, message):
-        logging.info("Remote call from module thread: %s, message=%s", sender.prefix, message)
-        if (message['type'] == 'pub'):
+        if (message['type']=='pub'):
             if (message['payload'] != None and message['topic'] != None):
-                self.mqtt_client.publish(message['topic'], message['payload'])
+                self.raw_publish(sender, message['payload'], message['topic'], 1, False)
+
+    def raw_publish(self, sender, message, topic, qos=0, retain=False):
+        retain_log = "R" if retain else "N"        
+        retian_log = "X" if (retain and message == '') else "R"
+        if (type(sender) is not musq):
+            logging.debug("pub [raw!] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.prefix, sender.my_id or None, retain_log, qos, topic, message) )
+        else:
+            logging.debug("pub [raw!] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % ("musq", "musq", retain_log, qos, topic, message) )
+        return self.mqtt_client.publish(topic, message, qos, retain)
             
+    def self_publish(self, sender, message, topic, qos=0, retain=False):
+        if (topic[0] != "/"):
+            topic = "/" + topic
+        topic = sender.autotopic + topic
+        retain_log = "R" if retain else "N"        
+        retian_log = "X" if (retain and message == '') else "R"
+        logging.debug("pub [self] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.prefix, sender.my_id, retain_log, qos, topic, message) )
+
+        if (topic == None and sender.autotopic == None):
+            return False
+        if (qos != None and qos != 1 and qos != 2 and qos != 3):
+            return False
+        if (qos == None):
+            qos = 0
+        if (retain == None):
+            retain = False
+
+        return self.mqtt_client.publish(topic, message, qos, retain)
+
+    def set_testament(self, sender, message, topic, qos=0, retain=False):
+        retain_log = "R" if retain else "N"        
+        logging.debug("last will & testament from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.prefix, sender.my_id, retain_log, qos, topic, message) )
+        self.mqtt_client.will_set(topic, message, qos, retain)
+
+    def formatted_time(self):
+        t = time.localtime()
+        formatted = time.strftime('%Y-%m-%d %H:%M:%S', t)
+
+        # TODO tz is weird, check daylight and decimal rounding
+        tz = time.timezone * -1
+        if (time.daylight):
+            tz = time.altzone * -1
+        tz = tz + 3500
+        tz = str.format('{0:+06.2f}', tz / 3600)
+        return formatted
+
+    def get_first_line(self, dev_file, strip=False):
+        with open(dev_file, "r") as file:
+            data=file.readline()
+        if (strip):
+            data = data.strip()
+        return data or ""
+
+    def get_from_shell(self, command):
+        result = subprocess.check_output(command, shell=True).strip()
+        return result
+
+    def get_all_if_data(self):
+        nic = []
+        for ix in socket.if_nameindex():
+            name = ix[1]
+            record = self.get_data_for_if( name )
+            nic.append( record )
+
+        return (nic)
+
+    def get_all_ips(self):
+        nic = []
+
+        for ix in socket.if_nameindex():
+            name = ix[1]
+            ip = self.get_data_for_if( name )['ip']
+            if (ip[0:4] != "127."):
+                nic.append( ip )
+
+        return (', '.join(nic))
+
+    def get_data_for_if( self, ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        ip = socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,  # SIOCGIFADDR
+            struct.pack('256s', ifname[:15].encode("UTF-8"))
+        )[20:24])
+        info = fcntl.ioctl(
+            s.fileno(),
+            0x8927,
+            struct.pack('256s', ifname[:15].encode("UTF-8"))
+        )
+        mac = ':'.join(['%02x' % (char) for char in info[18:24]])
+        result = {"name": ifname, "ip": ip, "mac": mac}
+        return result
+
+    def generate_musq_id(self):
+        # used as a unique identifier in /musq/[id] and /musq/heartbeat/[id] so a device can be reliably identified in the mqtt topic tree
+        # combines the following strings hostname : user supplied string + platform name  + cpu_serial_number + list_of_eth_macs_concatenated
+        # optionally, it can prepend the hostname (so you can swap SD cards with different musq installations - making the board identify itself differently, depending on its hostname) and it can also prepend some user supplied value
+        # runs it through 8 runs of md5 and grabs the first 2 bytes in hex, that's your musq id
+        # this id should survive a system change
+        # ids will probably clash, given enough boards...
+
+        env = self.get_env_data()
+        serial = env['serial']
+        macs = []
+        nics = self.get_all_if_data()
+        nics = (sorted(nics, key=lambda k: (k['name']).lower() ))
+        for nic in nics:
+            if ('eth' in nic['name']):
+                macs.append (nic['mac'])
+        macs = (''.join(macs)).replace(":", "")
+
+        input_str = ""
+        if (self.settings.get('musq_id_salt_hostname') != None):
+            input_str = env['hostname'] + ":"
+        if (self.settings.get('musq_id_extra_salt') != None):
+            salt = str(self.settings.get('musq_id_extra_salt'))
+            input_str = input_str + salt + ":"
+        input_str += self.platform_module + ":" + serial + macs
+        result = input_str
+        for i in range(1,9):
+            # print (result)
+            result = hashlib.md5(result.encode("UTF-8")).hexdigest().upper()
+        result=result[0:4]
+        logging.debug("Calculated system musq_id=%s from hash string \"%s\"" % (result, input_str))
+        return result
+
+    def get_env_data(self):
+        self.env = {}
+        val = (self.get_from_shell("hostname").decode("UTF-8")).strip()
+        if (val == ""):
+            val = "unknown"
+        self.env['hostname']  = val
+        
+        self.env['uptime'] = self.get_from_shell(" awk '{print int($1)}' /proc/uptime")
+
+        command = "cat /proc/cpuinfo"
+        all_info = subprocess.check_output(command, shell=True).strip()
+        for line in all_info.split(b"\n"):
+            line = line.decode("utf-8")
+            if "Processor" in line:
+                self.env['cpu']=(re.sub( ".*Processor.*:", "", line, 1)).strip()
+            if "Hardware" in line:
+                self.env['hw']=(re.sub( ".*Hardware.*:", "", line, 1)).strip()
+            if "Serial" in line:
+                self.env['serial']=(re.sub( ".*Serial.*:", "", line, 1)).strip()
+
+        self.env['temp'] = self.get_first_line('/etc/armbianmonitor/datasources/soctemp', strip=True)
+        self.env['temp1'] = self.get_first_line('/sys/devices/virtual/thermal/thermal_zone0/temp', strip=True)
+        self.env['temp2'] = self.get_first_line('/sys/devices/virtual/thermal/thermal_zone1/temp', strip=True)
+        self.env['ip'] = self.get_all_ips()
+        return self.env
+
     def main(self):
         self.mqtt_client = mqtt.Client(self.mqtt_client_id, clean_session=True, protocol=mqtt.MQTTv311)
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_message = self.on_message
+        self.mqtt_client.on_disconnect = self.on_disconnect
+        self.mqtt_client.on_publish = self.on_publish
+        self.mqtt_client.will_set("/musq/heartbeat/" + self.musq_id, "DEAD", 2, True)
         self.mqtt_client.connect(self.mqtt_server, int(self.mqtt_port), 20)
         self.mqtt_client.loop_start()
         pipes_data = self.load_pipes()
@@ -246,12 +429,43 @@ class musq():
             glue_class.set_creator(self)
             glue[key] = glue_class
 
+        self.killer = GracefulKiller()
         while True:
-            sleep(0.01)
+            time.sleep(0.01)
             for key, g in glue.items():
                 g.loop()
+            if (self.killer.kill_now):
+                self.prepare_kill()
+                break
+        
+        self.kill_heartbeat()
+        timeout = 0
+        while True:
+            if (timeout == 50):
+                logging.warning("Timed out waiting to confirm heartbeat kill signal. Disconnecting, testament will likely be published...")
+                break
+            elif (self.kill_heartbeat_id == "done"):
+                logging.info("Heartbeat confirmed dead, exiting")
+                break
+            else:
+                timeout = timeout + 1
+                time.sleep(0.1)
+                
+        self.mqtt_client.disconnect()
+        logging.info("Bye")
+        self.mqtt_client.loop_stop()
+
+class GracefulKiller:
+  kill_now = False
+  def __init__(self):
+    signal.signal(signal.SIGINT, self.exit_gracefully)
+    signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+  def exit_gracefully(self,signum, frame):
+    self.kill_now = True
+    # cleanup the stdout log so the rest of the log looks ok during disconnect/last will & testament messages. Yes, i'm avoiding the ^C
+    print("")
 
 m=musq()
 m.main()
-        
 

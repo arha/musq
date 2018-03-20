@@ -14,24 +14,10 @@ class mm_log_file(abstract.mm_abstract):
         self.__sp = ""
         self.file_ptr = None
 
-    def formatted_time(self):
-        t = time.localtime()
-        formatted = time.strftime('%Y-%m-%d %H:%M:%S', t)
-
-        # TODO tz is weird, check daylight and decimal rounding
-        tz = time.timezone * -1
-        if (time.daylight):
-            tz = time.altzone * -1
-        tz = tz + 3500
-        tz = str.format('{0:+06.2f}', tz / 3600)
-
-        return formatted
-
-
     def call(self, topic, trigger_topic, message, config_line): 
         m=message.payload.decode('UTF-8')
         if (self.file_ptr != None):
-            log_str = ("%s, topic [%s]: %s\n" % (self.formatted_time(), trigger_topic, m))
+            log_str = ("%s, topic [%s]: %s\n" % (self.creator.formatted_time(), trigger_topic, m))
 
             target_file = self.settings.get("filename")
             self.file_ptr = open(target_file, 'ba+')
@@ -39,8 +25,6 @@ class mm_log_file(abstract.mm_abstract):
             self.file_ptr.close()
 
             logging.debug("log_file output: " + log_str)
-
-
         return
 
     def link(self, creator, settings):
