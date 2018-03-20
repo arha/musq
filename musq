@@ -77,7 +77,7 @@ class musq():
                 logging.debug("Subscribing to " + crt_sub)
                 self.mqtt_client.subscribe(crt_sub)
 
-        self.mqtt_client.subscribe("/musq/dev/" + self.musq_id + "/#", 0)
+        self.mqtt_client.subscribe("/musq/dev/" + self.musq_id + "/gpio/#", 0)
         self.load_inputs()
         self.heartbeat()
 
