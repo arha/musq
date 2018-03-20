@@ -39,7 +39,7 @@ class musq():
         fileHandler = logging.FileHandler(self.log_file)
         fileHandler.setFormatter(logFormatter)
         rootLogger.addHandler(fileHandler)
-        rootLogger.setLevel(logging.INFO)
+        rootLogger.setLevel(logging.DEBUG)
         consoleHandler = logging.StreamHandler(sys.stdout)
         consoleHandler.setFormatter(logFormatter)
         rootLogger.addHandler(consoleHandler)
