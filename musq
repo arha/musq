@@ -1,6 +1,5 @@
 #!/usr/bin/python3 
 import subprocess, os, yaml, shlex, argparse, importlib, logging, sys, time, signal, re
-import socket, fcntl, struct    # needed to get the IPs of this device
 import hashlib                  # with which we create a short hash to identify ourselves in /musq/heartbeat
 import paho.mqtt.client as mqtt
 
@@ -9,7 +8,6 @@ from os.path import isfile, join
 
 from musq_modules import abstract
 from glue_classes import input_glue_script, output_glue_pipe, output_glue, input_glue_module
-
 
 class musq():
     mqtt_server = "localhost"
@@ -44,10 +42,11 @@ class musq():
         consoleHandler.setFormatter(logFormatter)
         rootLogger.addHandler(consoleHandler)
 
-        self.musq_id = self.generate_musq_id().strip()
+        self.platform = self.load_platform()
+        self.musq_id = self.platform.generate_musq_id().strip()
 
-        logging.info("-------------")
-        logging.info('musq starting')
+        logging.info("-----------------------------")
+        logging.info('musq starting; musq_id = %s' % (self.musq_id))
 
         self.mod_list = self.reload_modules()
         # print(self.mod_list)
@@ -81,6 +80,15 @@ class musq():
         self.load_inputs()
         self.heartbeat()
 
+    def on_message(self, client, userdatanp, msg):
+        if(self.killer.kill_now):
+            return
+        logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
+
+        inputs = self.load_inputs()
+        for key, i in inputs.items():
+            i.execute(msg.topic, msg)
+
     def heartbeat(self):
         self.raw_publish(self, self.formatted_time(), "/musq/heartbeat/" + self.musq_id, 2, True)
 
@@ -109,7 +117,6 @@ class musq():
             modules[key] = self.load_single_module(key)
 
         logging.info("Loaded: %s", ", ".join(result_str))
-
         return modules
 
     def load_single_module(self, mod_name):
@@ -127,15 +134,6 @@ class musq():
             instance = constructor()
             logging.debug("Loading module %s, id=%s, instance = %s", mod_name, instance.get_id(), instance)
             return instance
-
-    def on_message(self, client, userdatanp, msg):
-        if(self.killer.kill_now):
-            return
-        logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
-
-        inputs = self.load_inputs()
-        for key, i in inputs.items():
-            i.execute(msg.topic, msg)
 
     def prepare_kill(self):
         inputs = self.load_inputs()
@@ -214,6 +212,12 @@ class musq():
         logging.debug("Load outputs: pipes")
         logging.debug(pipes)
         return a
+
+    def load_platform(self):
+        from platforms import platform_x86_win
+        platform = platform_x86_win.platform_x86_win()
+        return platform
+
 
     def load_settings(self):
         found_config = False
@@ -314,75 +318,6 @@ class musq():
 
     def get_from_shell(self, command):
         result = subprocess.check_output(command, shell=True).strip()
-        return result
-
-    def get_all_if_data(self):
-        nic = []
-        for ix in socket.if_nameindex():
-            name = ix[1]
-            record = self.get_data_for_if( name )
-            nic.append( record )
-
-        return (nic)
-
-    def get_all_ips(self):
-        nic = []
-
-        for ix in socket.if_nameindex():
-            name = ix[1]
-            ip = self.get_data_for_if( name )['ip']
-            if (ip[0:4] != "127."):
-                nic.append( ip )
-
-        return (', '.join(nic))
-
-    def get_data_for_if( self, ifname):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ip = socket.inet_ntoa(fcntl.ioctl(
-            s.fileno(),
-            0x8915,  # SIOCGIFADDR
-            struct.pack('256s', ifname[:15].encode("UTF-8"))
-        )[20:24])
-        info = fcntl.ioctl(
-            s.fileno(),
-            0x8927,
-            struct.pack('256s', ifname[:15].encode("UTF-8"))
-        )
-        mac = ':'.join(['%02x' % (char) for char in info[18:24]])
-        result = {"name": ifname, "ip": ip, "mac": mac}
-        return result
-
-    def generate_musq_id(self):
-        # used as a unique identifier in /musq/[id] and /musq/heartbeat/[id] so a device can be reliably identified in the mqtt topic tree
-        # combines the following strings hostname : user supplied string + platform name  + cpu_serial_number + list_of_eth_macs_concatenated
-        # optionally, it can prepend the hostname (so you can swap SD cards with different musq installations - making the board identify itself differently, depending on its hostname) and it can also prepend some user supplied value
-        # runs it through 8 runs of md5 and grabs the first 2 bytes in hex, that's your musq id
-        # this id should survive a system change
-        # ids will probably clash, given enough boards...
-
-        env = self.get_env_data()
-        serial = env['serial']
-        macs = []
-        nics = self.get_all_if_data()
-        nics = (sorted(nics, key=lambda k: (k['name']).lower() ))
-        for nic in nics:
-            if ('eth' in nic['name']):
-                macs.append (nic['mac'])
-        macs = (''.join(macs)).replace(":", "")
-
-        input_str = ""
-        if (self.settings.get('musq_id_salt_hostname') != None):
-            input_str = env['hostname'] + ":"
-        if (self.settings.get('musq_id_extra_salt') != None):
-            salt = str(self.settings.get('musq_id_extra_salt'))
-            input_str = input_str + salt + ":"
-        input_str += self.platform_module + ":" + serial + macs
-        result = input_str
-        for i in range(1,9):
-            # print (result)
-            result = hashlib.md5(result.encode("UTF-8")).hexdigest().upper()
-        result=result[0:4]
-        logging.debug("Calculated system musq_id=%s from hash string \"%s\"" % (result, input_str))
         return result
 
     def get_env_data(self):
