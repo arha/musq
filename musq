@@ -214,10 +214,15 @@ class musq():
         return a
 
     def load_platform(self):
-        from platforms import platform_x86_win
-        platform = platform_x86_win.platform_x86_win()
+        import platform as pyplatform
+        pyplat = pyplatform.system().lower()
+        if pyplat == 'windows':
+            from platforms import platform_x86_win
+            platform = platform_x86_win.platform_x86_win()
+        elif pyplat == 'linux':
+            from platforms import platform_x86_linux
+            platform = platform_x86_win.platform_x86_linux()
         return platform
-
 
     def load_settings(self):
         found_config = False
