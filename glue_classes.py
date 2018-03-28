@@ -42,6 +42,7 @@ class input_glue:
     scripts = []
     __type = ""
     creator = None
+    module = None
 
     def __init__():
         pass
