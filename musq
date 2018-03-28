@@ -222,8 +222,14 @@ class musq():
                 from platforms import platform_x86_win
                 platform = platform_x86_win.platform_x86_win()
             elif pyplat == 'linux':
-                from platforms import platform_x86_linux
-                platform = platform_x86_linux.platform_x86_linux()
+                # try to detect various subplatforms, rpi, oranges, bananans, neopis, etc #TODO
+                if "raspberry pi 3" in (self.get_first_line("/sys/firmware/devicetree/base/model").lower()) or "raspberry pi 3" in (self.get_first_line("/proc/device-tree/model").lower()):
+                    from platforms import platform_rpi
+                    logging.debug("platform is rpi")
+                    platform = platform_rpi.platform_rpi()
+                else:
+                    from platforms import platform_x86_linux
+                    platform = platform_x86_linux.platform_x86_linux()
         else:
             plat = self.settings.get('platform')
             if plat == 'opione':
@@ -236,6 +242,7 @@ class musq():
                 logging.info("Platform configured: Windows, generic")
 
         platform.musq = self
+        platform.setup()
         return platform
 
     def load_settings(self):
