@@ -138,7 +138,8 @@ class musq():
     def prepare_kill(self):
         inputs = self.load_inputs()
         for key, i in inputs.items():
-            i.module.signal_exit()
+            if i.module != None:
+                i.module.signal_exit()
 
     def on_glue_output_pub(self, glue_class, topic, payload):
         logging.debug("Publish event from glue_class: " + glue_class.name + " to topic " + topic + " with payload " + payload)
