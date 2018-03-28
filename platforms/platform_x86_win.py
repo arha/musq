@@ -14,5 +14,8 @@ class platform_x86_win(platform_abstract.platform_abstract):
     def signal_exit(self):
         super(  platform_x86_win, self).setup()
 
+    def get_all_ips(self):
+        return None
+
     def generate_musq_id(self):
         return "W_86"

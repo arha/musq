@@ -2,6 +2,7 @@ __author__ = 'arha'
 from platforms import platform_abstract
 import logging
 import socket, fcntl, struct    # needed to get the IPs of this device
+import sys, hashlib
 
 class platform_x86_linux(platform_abstract.platform_abstract):
     def __init__(self):
@@ -21,35 +22,45 @@ class platform_x86_linux(platform_abstract.platform_abstract):
         for ix in socket.if_nameindex():
             name = ix[1]
             record = self.get_data_for_if( name )
-            nic.append( record )
+            if (record != None):
+                nic.append( record )
 
         return (nic)
 
     def get_all_ips(self):
+        # TODO: /sys/class/net/<iface>/address
         nic = []
 
         for ix in socket.if_nameindex():
             name = ix[1]
-            ip = self.get_data_for_if( name )['ip']
-            if (ip[0:4] != "127."):
-                nic.append( ip )
+            result = self.get_data_for_if( name )
+            if (result != None and result.get('ip') != None):
+                ip = result['ip']
+                if (ip[0:4] != "127."):
+                    nic.append( ip )
 
         return (', '.join(nic))
 
     def get_data_for_if( self, ifname):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ip = socket.inet_ntoa(fcntl.ioctl(
-            s.fileno(),
-            0x8915,  # SIOCGIFADDR
-            struct.pack('256s', ifname[:15].encode("UTF-8"))
-        )[20:24])
-        info = fcntl.ioctl(
-            s.fileno(),
-            0x8927,
-            struct.pack('256s', ifname[:15].encode("UTF-8"))
-        )
-        mac = ':'.join(['%02x' % (char) for char in info[18:24]])
-        result = {"name": ifname, "ip": ip, "mac": mac}
+        try:
+            info = fcntl.ioctl(
+                s.fileno(),
+                0x8915,  # SIOCGIFADDR
+                struct.pack('256s', ifname[:15].encode("UTF-8"))
+            )
+            ip = socket.inet_ntoa(info[20:24])
+
+            info = fcntl.ioctl(
+                s.fileno(),
+                0x8927,
+                struct.pack('256s', ifname[:15].encode("UTF-8"))
+            )
+            mac = ':'.join(['%02x' % (char) for char in info[18:24]])
+            result = {"name": ifname, "ip": ip, "mac": mac}
+        except OSError:
+            logging.warning("Cannot get ip/mac of interface %s, error %s: %s" % (ifname, sys.exc_info()[0], sys.exc_info()[1]))
+            result = None
         return result
 
     def generate_musq_id(self):
@@ -60,23 +71,25 @@ class platform_x86_linux(platform_abstract.platform_abstract):
         # this id should survive a system change
         # ids will probably clash, given enough boards...
 
-        env = self.get_env_data()
-        serial = env['serial']
+        env = self.musq.get_env_data()
+        # TODO serial number on x86
+        serial = env.get("serial") or ""
         macs = []
         nics = self.get_all_if_data()
         nics = (sorted(nics, key=lambda k: (k['name']).lower() ))
+        # TODO: maybe exclude bridges or check how to grab mac of components
         for nic in nics:
-            if ('eth' in nic['name']):
+            if ('eth' in nic['name'] or 'br' in nic['name']):
                 macs.append (nic['mac'])
         macs = (''.join(macs)).replace(":", "")
 
         input_str = ""
-        if (self.settings.get('musq_id_salt_hostname') != None):
+        if (self.musq.settings.get('musq_id_salt_hostname') != None):
             input_str = env['hostname'] + ":"
-        if (self.settings.get('musq_id_extra_salt') != None):
-            salt = str(self.settings.get('musq_id_extra_salt'))
+        if (self.musq.settings.get('musq_id_extra_salt') != None):
+            salt = str(self.musq.settings.get('musq_id_extra_salt'))
             input_str = input_str + salt + ":"
-        input_str += self.platform_module + ":" + serial + macs
+        input_str += self.name + ":" + serial + macs
         result = input_str
         for i in range(1,9):
             # print (result)

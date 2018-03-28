@@ -221,7 +221,8 @@ class musq():
             platform = platform_x86_win.platform_x86_win()
         elif pyplat == 'linux':
             from platforms import platform_x86_linux
-            platform = platform_x86_win.platform_x86_linux()
+            platform = platform_x86_linux.platform_x86_linux()
+        platform.musq = self
         return platform
 
     def load_settings(self):
@@ -315,10 +316,13 @@ class musq():
         return formatted
 
     def get_first_line(self, dev_file, strip=False):
-        with open(dev_file, "r") as file:
-            data=file.readline()
-        if (strip):
-            data = data.strip()
+        try:
+            with open(dev_file, "r") as file:
+                data=file.readline()
+            if (strip):
+                data = data.strip()
+        except FileNotFoundError:
+            data = ""
         return data or ""
 
     def get_from_shell(self, command):
@@ -348,7 +352,7 @@ class musq():
         self.env['temp'] = self.get_first_line('/etc/armbianmonitor/datasources/soctemp', strip=True)
         self.env['temp1'] = self.get_first_line('/sys/devices/virtual/thermal/thermal_zone0/temp', strip=True)
         self.env['temp2'] = self.get_first_line('/sys/devices/virtual/thermal/thermal_zone1/temp', strip=True)
-        self.env['ip'] = self.get_all_ips()
+        self.env['ip'] = self.platform.get_all_ips()
         return self.env
 
     def main(self):
