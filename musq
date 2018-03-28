@@ -215,13 +215,25 @@ class musq():
 
     def load_platform(self):
         import platform as pyplatform
-        pyplat = pyplatform.system().lower()
-        if pyplat == 'windows':
-            from platforms import platform_x86_win
-            platform = platform_x86_win.platform_x86_win()
-        elif pyplat == 'linux':
-            from platforms import platform_x86_linux
-            platform = platform_x86_linux.platform_x86_linux()
+        if (self.settings.get('platform') == None):
+            pyplat = pyplatform.system().lower()
+            if pyplat == 'windows':
+                from platforms import platform_x86_win
+                platform = platform_x86_win.platform_x86_win()
+            elif pyplat == 'linux':
+                from platforms import platform_x86_linux
+                platform = platform_x86_linux.platform_x86_linux()
+        else:
+            plat = self.settings.get('platform')
+            if plat == 'opione':
+                from platforms import platform_opione
+                platform = platform_opione.platform_opione()
+                logging.info("Platform configured: Orange Pi One")
+            if plat == 'win' or plat == 'windows':
+                from platforms import platform_x86_win
+                platform = platform_x86_win.platform_x86_win()
+                logging.info("Platform configured: Windows, generic")
+
         platform.musq = self
         return platform
 

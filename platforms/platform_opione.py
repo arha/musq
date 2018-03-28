@@ -1,0 +1,28 @@
+__author__ = 'arha'
+from platforms import platform_abstract, platform_x86_linux
+import logging
+import socket, fcntl, struct    # needed to get the IPs of this device
+import sys, hashlib
+
+class platform_opione(platform_x86_linux.platform_x86_linux):
+    def __init__(self):
+        super(  platform_opione, self).__init__()
+        self.name = "opione"
+        logging.debug("Platform init: opione")
+
+    def setup(self):
+        super(  platform_opione, self).setup()
+
+    def signal_exit(self):
+        super(  platform_opione, self).setup()
+
+
+    def get_all_if_data(self):
+        nic = []
+        for ix in socket.if_nameindex():
+            name = ix[1]
+            record = self.get_data_for_if( name )
+            if (record != None):
+                nic.append( record )
+
+        return (nic)
