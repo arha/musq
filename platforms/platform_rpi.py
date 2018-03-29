@@ -3,6 +3,19 @@ from platforms import platform_abstract, platform_x86_linux
 import logging
 import socket, fcntl, struct    # needed to get the IPs of this device
 import sys, hashlib
+from enum import Enum
+
+class Rpi_board(Enum):
+    UNKNOWN = 0
+    PI_MODEL_A = 1
+    PI_MODEL_B = 2
+    PI_MODEL_B_PLUS = 3
+    PI_COMPUTE = 4
+    PI2_MODEL_B = 5
+    PI_ZERO = 6
+    PI3_MODEL_B = 7
+    PI3_MODEL_B_PLUS = 8
+
 
 class platform_rpi(platform_x86_linux.platform_x86_linux):
     def __init__(self):
@@ -20,8 +33,15 @@ class platform_rpi(platform_x86_linux.platform_x86_linux):
     def platform_detect_extended(self):
         str1 = self.musq.get_first_line("/sys/firmware/devicetree/base/model").strip()
         str2 = self.musq.get_first_line("/proc/device-tree/model").strip()
-        self.model = str1 or str2
-        logging.debug("RPi model: %s" % self.model)
+        self.model_string = str1 or str2
+        self.model = Rpi_board.UNKNOWN
+        # maybe using Revision numbers is better? like a02082... https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
+        if ("3 Model B Rev" in self.model_string):
+            self.model = Rpi_board.PI3_MODEL_B
+        elif ("3 Model B+ Rev" in self.model_string):   # eeeh... idk
+            self.model = Rpi_board.PI3_MODEL_B_PLUS
+
+        logging.debug("RPi model: %s (%s)" % (self.model, self.model_string))
 
     def get_all_if_data(self):
         nic = []
