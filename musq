@@ -236,6 +236,10 @@ class musq():
                 from platforms import platform_opione
                 platform = platform_opione.platform_opione()
                 logging.info("Platform configured: Orange Pi One")
+            if plat == 'nanopi_neo':
+                from platforms import platform_nanopi_neo
+                platform = platform_nanopi_neo.platform_nanopi_neo()
+                logging.info("Platform configured: Orange Pi One")
             if plat == 'win' or plat == 'windows':
                 from platforms import platform_x86_win
                 platform = platform_x86_win.platform_x86_win()
