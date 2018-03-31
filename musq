@@ -249,29 +249,26 @@ class musq():
         platform.setup()
         return platform
 
+    def load_settings_file(self, path):
+        if path != None and isfile(path):
+            print("Loading settings file: %s" % path)
+            settings = yaml.load(open(path))
+            self.config_file = path
+            return settings
+        else:
+            return None
+
     def load_settings(self):
-        found_config = False
-        if (self.config_file != None):
-            print("Supplied config file = " + self.config_file)
-            if (not found_config and isfile(self.config_file)):
-                found_config=True
+        tgl = False
 
-        test_file = os.path.join(os.path.expanduser("~"), ".musq.conf")
-        # print(test_file)
-        if (not found_config and isfile(test_file)):
-            found_config=True
-            self.config_file=test_file
-
-        test_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf")
+        if not tgl:
+            settings = self.load_settings_file(self.config_file)
+            if settings == None:
+                settings = self.load_settings_file( os.path.join(os.path.expanduser("~"), ".musq.conf") )
+            if settings == None:
+                settings = self.load_settings_file( os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf") )
         self.inputs=None
-        # print(test_file)
-        if (not found_config and isfile(test_file)):
-            found_config=True
-            self.config_file=test_file
 
-        print("Using config file: " + self.config_file)
-
-        settings = yaml.load(open(self.config_file))
         self.mqtt_server = settings['mqtt_server']
         self.mqtt_port = settings['mqtt_port']
         self.mqtt_client_id = settings['mqtt_client_id']
