@@ -259,14 +259,11 @@ class musq():
             return None
 
     def load_settings(self):
-        tgl = False
-
-        if not tgl:
-            settings = self.load_settings_file(self.config_file)
-            if settings == None:
-                settings = self.load_settings_file( os.path.join(os.path.expanduser("~"), ".musq.conf") )
-            if settings == None:
-                settings = self.load_settings_file( os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf") )
+        settings = self.load_settings_file(self.config_file)
+        if settings == None:
+            settings = self.load_settings_file( os.path.join(os.path.expanduser("~"), ".musq.conf") )
+        if settings == None:
+            settings = self.load_settings_file( os.path.join(os.path.dirname(os.path.realpath(__file__)), "musq.conf") )
         self.inputs=None
 
         self.mqtt_server = settings['mqtt_server']
