@@ -5,6 +5,10 @@ import socket, fcntl, struct    # needed to get the IPs of this device
 import sys, hashlib
 from enum import Enum
 
+# TODO: leds pi zero w:
+# root@rpi-zero-arha:/sys/class/leds/led0# echo "1" > /sys/class/leds/led0/brightness
+# root@rpi-zero-arha:/sys/class/leds/led0# echo "0" > /sys/class/leds/led0/brightness
+
 class Rpi_board(Enum):
     UNKNOWN = 0
     PI_MODEL_A = 1
@@ -13,8 +17,13 @@ class Rpi_board(Enum):
     PI_COMPUTE = 4
     PI2_MODEL_B = 5
     PI_ZERO = 6
-    PI3_MODEL_B = 7
-    PI3_MODEL_B_PLUS = 8
+    PI_ZERO_W = 7
+    PI3_MODEL_B = 8
+    PI3_MODEL_B_PLUS = 9
+
+class Rpi_hats(Enum):
+    NONE = 0
+    PIMORONI_UNICORN_64=100
 
 
 class platform_rpi(platform_x86_linux.platform_x86_linux):
@@ -26,6 +35,7 @@ class platform_rpi(platform_x86_linux.platform_x86_linux):
     def setup(self):
         super(  platform_rpi, self).setup()
         self.platform_detect_extended()
+        self.platform_detect_hat()
 
     def signal_exit(self):
         super(  platform_rpi, self).setup()
@@ -40,8 +50,32 @@ class platform_rpi(platform_x86_linux.platform_x86_linux):
             self.model = Rpi_board.PI3_MODEL_B
         elif ("3 Model B+ Rev" in self.model_string):   # eeeh... idk
             self.model = Rpi_board.PI3_MODEL_B_PLUS
+        elif ("Raspberry Pi Zero W"):
+            self.model = Rpi_board.PI_ZERO_W
 
         logging.debug("RPi model: %s (%s)" % (self.model, self.model_string))
+
+    def platform_detect_hat(self):
+        # https://www.raspberrypi.org/forums/viewtopic.php?t=108134
+        # https://raspberrypi.stackexchange.com/questions/39153/how-to-detect-what-kind-of-hat-or-gpio-board-is-plugged-in-if-any
+        
+        hat_path = "/proc/device-tree/hat/"
+        vendor      = self.musq.get_first_line(hat_path + "vendor").strip()
+        product_id  = self.musq.get_first_line(hat_path + "product_id").strip()
+        product_ver = self.musq.get_first_line(hat_path + "product_ver").strip()
+        product     = self.musq.get_first_line(hat_path + "product").strip()
+
+        self.hat = Rpi_hats.NONE
+        if ("Unicorn HAT\0" == product and "0x9a17\0" == product_id):
+            self.hat = Rpi_hats.PIMORONI_UNICORN_64
+            self.hat_name = product.rstrip('\0')
+
+        if (self.hat != Rpi_hats.NONE):
+            logging.info("Detected RPi hat: %s " % ( self.hat))
+            self.hat_setup()
+
+    def hat_setup(self):
+        logging.debug("Setting up hat %s" % (self.hat_name))
 
     def get_all_if_data(self):
         nic = []
@@ -50,7 +84,6 @@ class platform_rpi(platform_x86_linux.platform_x86_linux):
             record = self.get_data_for_if( name )
             if (record != None):
                 nic.append( record )
-
         return (nic)
 
     def get_all_ips(self):
