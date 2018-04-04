@@ -344,7 +344,11 @@ class musq():
         return data or ""
 
     def get_from_shell(self, command):
-        result = subprocess.check_output(command, shell=True).strip()
+        result = ""
+        try:
+            result = subprocess.check_output(command, shell=True).strip()
+        except Exception:
+            return ""
         return result
 
     def get_env_data(self):
