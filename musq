@@ -196,7 +196,7 @@ class musq():
     def load_pipes(self):
         a = yaml.load(open(self.config_file))
         pipes = {}
-        if (a['outputs'] != None):
+        if (a.get('outputs') != None):
             for key, output in a['outputs'].items():
                 if (output['type'] == 'pipe'):
                     pipes[key] = output
@@ -222,11 +222,16 @@ class musq():
                 from platforms import platform_x86_win
                 platform = platform_x86_win.platform_x86_win()
             elif pyplat == 'linux':
+                print ("_____ " + self.get_from_shell("cat /proc/cpuinfo | grep machine | awk -F ': ' '{print $2}'").decode("UTF-8").lower())
                 # try to detect various subplatforms, rpi, oranges, bananans, neopis, etc #TODO
                 if "raspberry pi" in (self.get_first_line("/sys/firmware/devicetree/base/model").lower()) or "raspberry pi" in (self.get_first_line("/proc/device-tree/model").lower()):
                     from platforms import platform_rpi
                     logging.debug("platform is rpi")
                     platform = platform_rpi.platform_rpi()
+                if "onion omega2+" in (self.get_from_shell("cat /proc/cpuinfo | grep machine | awk -F ': ' '{print $2}'").decode("UTF-8").lower()):
+                    from platforms import platform_onion2
+                    logging.debug("platform is omega onion2. You are one patient guy/gal!") 
+                    platform = platform_onion2.platform_onion2()
                 else:
                     from platforms import platform_x86_linux
                     platform = platform_x86_linux.platform_x86_linux()
@@ -353,7 +358,8 @@ class musq():
 
     def get_env_data(self):
         self.env = {}
-        val = (self.get_from_shell("hostname").decode("UTF-8")).strip()
+        # val = (self.get_from_shell("hostname").decode("UTF-8")).strip()
+        val = (self.get_from_shell("hostname")).strip()
         if (val == ""):
             val = "unknown"
         self.env['hostname']  = val
