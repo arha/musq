@@ -28,7 +28,7 @@ class mm_http_request(abstract.mm_abstract):
             print ( result )
 
             publish_result = self.settings.get('publish_result')
-            if publish_result != None:
+            if publish_result != None and publish_result != trigger_topic:
                 logging.info("Publishing result to %s" % publish_result)
                 publish_qos = self.settings.get('publish_qos') or "0"
                 publish_retain = self.settings.get("publish_retain") or False
