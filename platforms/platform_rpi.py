@@ -1,5 +1,5 @@
 __author__ = 'arha'
-from platforms import platform_abstract, platform_x86_linux
+from platforms import platform_abstract, platform_linux
 import logging
 import socket, fcntl, struct    # needed to get the IPs of this device
 import sys, hashlib
@@ -26,7 +26,7 @@ class Rpi_hats(Enum):
     PIMORONI_UNICORN_64=100
 
 
-class platform_rpi(platform_x86_linux.platform_x86_linux):
+class platform_rpi(platform_linux.platform_linux):
     def __init__(self):
         super(  platform_rpi, self).__init__()
         self.name = "rpi"

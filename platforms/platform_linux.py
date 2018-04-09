@@ -4,17 +4,17 @@ import logging
 import socket, fcntl, struct    # needed to get the IPs of this device
 import sys, hashlib
 
-class platform_x86_linux(platform_abstract.platform_abstract):
+class platform_linux(platform_abstract.platform_abstract):
     def __init__(self):
-        super(  platform_x86_linux, self).__init__()
+        super(  platform_linux, self).__init__()
         self.name = "x86_linux"
         logging.debug("Platform init: x86_linux")
 
     def setup(self):
-        super(  platform_x86_linux, self).setup()
+        super(  platform_linux, self).setup()
 
     def signal_exit(self):
-        super(  platform_x86_linux, self).setup()
+        super(  platform_linux, self).setup()
 
 
     def get_all_if_data(self):

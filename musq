@@ -49,8 +49,6 @@ class musq():
         logging.info('musq starting; musq_id = %s' % (self.musq_id))
 
         self.mod_list = self.reload_modules()
-        # print(self.mod_list)
-
 
     def on_publish(self, client, userdata, mid):
         if (self.killer.kill_now):
@@ -120,9 +118,6 @@ class musq():
         return modules
 
     def load_single_module(self, mod_name):
-        #if (mod_name == 'unicorn'):
-        #    return None
-        # logging.debug("Loading module " + mod_name)
         mod = None
         try:
             mod = importlib.import_module("musq_modules." + mod_name)
@@ -163,19 +158,13 @@ class musq():
                 inputs[key] = glue_class;
             if ('module' in i.keys()):
                 if (i['module'] in self.mod_list):
-                    # glue_class = input_glue_module(key, i['topic'], self.mod_list[i['module']])
                     # do not load disabled instances
                     if (('off' in i) or ('disabled' in i)):
                         logging.debug("Module disabled")
                         pass
                     module_instance = self.load_single_module(i['module'])
                     glue_class = input_glue_module(key, i['topic'], module_instance)
-                    #self.mod_list[i['module']].link()
-                    #self.mod_list[i['module']].set_creator(self)
-                    #self.mod_list[i['module']].set_settings(i)
                     result = module_instance.link(self, i)
-                    # module_instance.set_creator(self)
-                    # module_instance.set_settings(i)
 
                     if ('thread' in i.keys()):
                         logging.info("starting thread for module " + key)
@@ -233,8 +222,8 @@ class musq():
                     logging.debug("platform is omega onion2. You are one patient guy/gal!") 
                     platform = platform_onion2.platform_onion2()
                 else:
-                    from platforms import platform_x86_linux
-                    platform = platform_x86_linux.platform_x86_linux()
+                    from platforms import platform_linux
+                    platform = platform_linux.platform_linux()
         else:
             plat = self.settings.get('platform')
             if plat == 'opione':
@@ -245,7 +234,7 @@ class musq():
                 from platforms import platform_nanopi_neo
                 platform = platform_nanopi_neo.platform_nanopi_neo()
                 logging.info("Platform configured: Orange Pi One")
-            if plat == 'win' or plat == 'windows':
+            if plat == 'win' or plat == 'windows' or plat == 'x86_win':
                 from platforms import platform_x86_win
                 platform = platform_x86_win.platform_x86_win()
                 logging.info("Platform configured: Windows, generic")

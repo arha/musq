@@ -1,10 +1,10 @@
 __author__ = 'arha'
-from platforms import platform_abstract, platform_x86_linux
+from platforms import platform_abstract, platform_linux
 import logging
 import socket, fcntl, struct    # needed to get the IPs of this device
 import sys, hashlib
 
-class platform_opione(platform_x86_linux.platform_x86_linux):
+class platform_opione(platform_linux.platform_linux):
     def __init__(self):
         super(  platform_opione, self).__init__()
         self.name = "opione"

@@ -1,5 +1,5 @@
 __author__ = 'arha'
-from platforms import platform_abstract, platform_x86_linux
+from platforms import platform_abstract, platform_linux
 import logging
 import socket, fcntl, struct    # needed to get the IPs of this device
 import sys, hashlib
@@ -8,7 +8,7 @@ from enum import Enum
 class nanopi_neo_board(Enum):
     UNKNOWN = 0
 
-class platform_nanopi_neo(platform_x86_linux.platform_x86_linux):
+class platform_nanopi_neo(platform_linux.platform_linux):
     def __init__(self):
         super(  platform_nanopi_neo, self).__init__()
         self.name = "nanopi_neo"
