@@ -302,7 +302,7 @@ class musq():
 
         if (topic == None and sender.autotopic == None):
             return False
-        if (qos != None and qos != 1 and qos != 2 and qos != 3):
+        if (qos != None and qos != 0 and qos != 1 and qos != 2):
             return False
         if (qos == None):
             qos = 0
