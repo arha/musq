@@ -48,9 +48,9 @@ class platform_rpi(platform_linux.platform_linux):
         # maybe using Revision numbers is better? like a02082... https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
         if ("3 Model B Rev" in self.model_string):
             self.model = Rpi_board.PI3_MODEL_B
-        elif ("3 Model B+ Rev" in self.model_string):   # eeeh... idk
+        elif ("3 Model B Plus Rev" in self.model_string):   # eeeh... idk
             self.model = Rpi_board.PI3_MODEL_B_PLUS
-        elif ("Raspberry Pi Zero W"):
+        elif ("Raspberry Pi Zero W" in self.model_string):
             self.model = Rpi_board.PI_ZERO_W
 
         logging.debug("RPi model: %s (%s)" % (self.model, self.model_string))
