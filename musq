@@ -380,8 +380,13 @@ class musq():
         self.mqtt_client.on_disconnect = self.on_disconnect
         self.mqtt_client.on_publish = self.on_publish
         self.mqtt_client.will_set("/musq/heartbeat/" + self.musq_id, "DEAD", 2, True)
-        self.mqtt_client.connect(self.mqtt_server, int(self.mqtt_port), 20)
-        self.mqtt_client.loop_start()
+        try:
+            self.mqtt_client.connect(self.mqtt_server, int(self.mqtt_port), 20)
+            self.mqtt_client.loop_start()
+        except:
+            e = sys.exc_info()
+            logging.error("Fatal MQTT error while connecting to %s:%s: %s (%s). Exiting" % ( self.mqtt_server,  self.mqtt_port, e[0], e[1] ) )
+            sys.exit(1)
         pipes_data = self.load_pipes()
 
         glue = {}
