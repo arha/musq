@@ -15,6 +15,7 @@ class musq():
     mqtt_client_id="musq-default"
     mqtt_keepalive=12
     kill_heartbeat_id = None   # this is used to trace when the heartbeat topic has been killed, and then safely shut down
+    # logger = logging.getLogger(__name__)
 
     def __init__(self):
         parser=argparse.ArgumentParser("musq demo")

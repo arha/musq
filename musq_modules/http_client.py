@@ -30,8 +30,6 @@ class mm_http_client(abstract.mm_abstract):
             logging.info("Sending http request %s via %s" % (url, method))
             (resp_headers, result) = h.request(url, method, data)
 
-            #print ( result )
-
             publish_result = self.settings.get('publish_result')
             if publish_result != None and publish_result != trigger_topic:
                 logging.info("Publishing result to %s" % publish_result)

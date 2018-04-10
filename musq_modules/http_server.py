@@ -12,6 +12,19 @@ class mm_http_server(abstract.mm_abstract):
         self.last_send=time.time()
         self.last_send=0
 
+        logging.getLogger("urllib").setLevel(logging.CRITICAL)
+        logging.getLogger("urllib2").setLevel(logging.CRITICAL)
+        logging.getLogger("requests").setLevel(logging.CRITICAL)
+        logging.getLogger("http").setLevel(logging.CRITICAL)
+
+    def configure_routes(self):
+        if self.settings.get('url') == None:
+            logging.warning("No url defined for http server")
+        self.routes = {
+            "/mama/are/mere/21": { "topic": "/example/http_server/21" },
+            "/mama/are/pere/32": { "topic": "/example/http_server/32" },
+            }
+
     def call(self, topic, trigger_topic, message, config_line): 
         return
         logging.debug("topic=" + topic)
@@ -21,6 +34,7 @@ class mm_http_server(abstract.mm_abstract):
 
     def link(self, creator, settings):
         super(  mm_http_server, self).link(creator, settings)
+        self.configure_routes()
         logging.debug("http_server linked!")
 
     def main(self):
@@ -34,9 +48,27 @@ class mm_http_server(abstract.mm_abstract):
         logging.debug("Thread finished on thread_test")
         return
 
+    def perform_route(self, handler):
+        path = handler.path
+        method = handler.command
+        headers = handler.headers
+        ip = handler.client_address
 
-    def route(self, path, headers, client_address):
-        logging.info("HTTP requestline: %s" % path)
+        logging.error("HTTP request: %s:%s - %s %s " % ( ip[0], ip[1], method, path ))
+
+        if path in self.routes:
+            route = self.routes.get(path)
+            result = "139"
+            topic = route.get("topic")
+            if topic != None:
+                qos = 2
+                retain = False
+                self.creator.raw_publish(self, result, topic, qos, retain )
+                return 200
+            else:
+                logging.warning("HTTP server received call for route [%s], but points to invalid topic.")
+        else:
+            return 404
 
     def run(self):
         logging.debug("thread start for http_server")
@@ -47,7 +79,7 @@ class mm_http_server(abstract.mm_abstract):
         self.creator = creator
 
 class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-
+    server_version = "musq/0.1"
     parent = None
 
     def _set_headers(self):
@@ -60,21 +92,23 @@ class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         self._set_headers()
-        self.server.parent.route(self.path, self.headers, self.client_address)
-        logging.info(self.requestline)
-        self.wfile.write("<html><body><h1>hi!</h1></body></html>".encode("UTF-8"))
+        self.server.parent.perform_route(self)
+        self.wfile.write("<html><body><h1>ok.</h1></body></html>".encode("UTF-8"))
 
     def do_POST(self):
         self._set_headers()
-        self.server.parent.route(self.path, self.headers, self.client_address)
+        self.server.parent.perform_route(self.path, self.headers, self.client_address)
         self.wfile.write("<html><body><h1>POST!</h1></body></html>".encode("UTF-8"))
 
     def do_PUT(self):
         self._set_headers()
-        self.server.parent.route(self.path, self.headers, self.client_address)
+        self.server.parent.perform_route(self.path, self.headers, self.client_address)
         self.wfile.write("<html><body><h1>PUT!!</h1></body></html>".encode("UTF-8"))
 
     def do_DELETE(self):
         self._set_headers()
-        self.server.parent.route(self.path, self.headers, self.client_address)
+        self.server.parent.perform_route(self.path, self.headers, self.client_address)
         self.wfile.write("<html><body><h1>DELETE!!</h1></body></html>".encode("UTF-8"))
+
+    def log_message(self, format, *args):
+        return
