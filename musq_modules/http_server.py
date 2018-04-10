@@ -37,11 +37,6 @@ class mm_http_server(abstract.mm_abstract):
                     route_dict["topic"] = data.get("topic").strip()
                     self.routes[route] = route_dict
 
-        #self.routes = {
-        #    "/mama/are/mere/21": { "topic": "/example/http_server/21" },
-        #    "/mama/are/pere/32": { "topic": "/example/http_server/32" },
-        #    }
-
     def call(self, topic, trigger_topic, message, config_line): 
         return
         logging.debug("topic=" + topic)
@@ -57,11 +52,13 @@ class mm_http_server(abstract.mm_abstract):
     def main(self):
         PORT = int(self.settings.get("port")) or 8000
         handler = MusqHTTPRequestHandler
-        #handler = self.musq_handler_factory()
-        with http.server.HTTPServer(("", PORT), handler) as httpd:
-            httpd.parent = self
-            logging.info("Starting musq HTTP server on 0.0.0.0:%d", PORT)
-            httpd.serve_forever()
+        # eugh, can't use with unless running python 3.6 
+        # https://stackoverflow.com/questions/46396575/cannot-run-python3-httpserver-on-arm-processoru
+
+        httpd = http.server.HTTPServer(("", PORT), handler)
+        httpd.parent = self
+        logging.info("Starting musq HTTP server on 0.0.0.0:%d", PORT)
+        httpd.serve_forever()
         logging.debug("Thread finished on thread_test")
         return
 
