@@ -18,12 +18,29 @@ class mm_http_server(abstract.mm_abstract):
         logging.getLogger("http").setLevel(logging.CRITICAL)
 
     def configure_routes(self):
-        if self.settings.get('url') == None:
-            logging.warning("No url defined for http server")
-        self.routes = {
-            "/mama/are/mere/21": { "topic": "/example/http_server/21" },
-            "/mama/are/pere/32": { "topic": "/example/http_server/32" },
-            }
+        self.routes = {}
+        if (self.settings.get('routes') == None):
+            if self.settings.get('url') == None:
+                logging.warning("No url defined for http server")
+                # todo - maybe configure default everything for this instance to publish to topic
+                return
+            if self.settings.get('topic') == None:
+                logging.warning("No topic defined for http server, nothing will be published to MQTT")
+                return
+        if self.settings.get('url') != None and self.settings.get('topic') != None:
+            self.routes[self.settings.get('url').strip()] = { "topic": self.settings.get("topic").strip() }
+
+        if (self.settings.get('routes') != None):
+            for route_record in (self.settings.get('routes')):
+                route_dict={}
+                for route, data in route_record.items():
+                    route_dict["topic"] = data.get("topic").strip()
+                    self.routes[route] = route_dict
+
+        #self.routes = {
+        #    "/mama/are/mere/21": { "topic": "/example/http_server/21" },
+        #    "/mama/are/pere/32": { "topic": "/example/http_server/32" },
+        #    }
 
     def call(self, topic, trigger_topic, message, config_line): 
         return
@@ -64,6 +81,7 @@ class mm_http_server(abstract.mm_abstract):
                 qos = 2
                 retain = False
                 self.creator.raw_publish(self, result, topic, qos, retain )
+                # todo return code, improve checking based on methods
                 return 200
             else:
                 logging.warning("HTTP server received call for route [%s], but points to invalid topic.")
