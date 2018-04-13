@@ -6,22 +6,22 @@ import sys, hashlib, re, subprocess
 
 class platform_linux(platform_abstract.platform_abstract):
     def __init__(self):
-        super(  platform_linux, self).__init__()
+        super(platform_linux, self).__init__()
         self.name = "x86_linux"
         logging.debug("Platform init: x86_linux")
 
     def setup(self):
-        super(  platform_linux, self).setup()
+        super(platform_linux, self).setup()
 
     def signal_exit(self):
-        super(  platform_linux, self).setup()
+        super(platform_linux, self).setup()
 
     def get_env_data(self):
         env = super(  platform_linux, self).get_env_data()
         env.update({"platform": "linux generic"})
         val = (self.musq.get_from_shell("hostname")).strip()
         # val = (self.musq.get_from_shell("hostname").decode("UTF-8")).strip()
-        if (val == ""):
+        if val == "":
             val = "unknown"
         env['hostname']  = val
 
@@ -32,27 +32,25 @@ class platform_linux(platform_abstract.platform_abstract):
         for line in all_info.split(b"\n"):
             line = line.decode("utf-8")
             if "Processor" in line:
-                env['cpu']=(re.sub( ".*Processor.*:", "", line, 1)).strip()
+                env['cpu'] = (re.sub( ".*Processor.*:", "", line, 1)).strip()
             if "Hardware" in line:
-                env['hw']=(re.sub( ".*Hardware.*:", "", line, 1)).strip()
+                env['hw'] = (re.sub( ".*Hardware.*:", "", line, 1)).strip()
             if "Serial" in line:
-                env['serial']=(re.sub( ".*Serial.*:", "", line, 1)).strip()
+                env['serial'] = (re.sub( ".*Serial.*:", "", line, 1)).strip()
 
         env['temp'] = self.musq.get_first_line('/etc/armbianmonitor/datasources/soctemp', strip=True)
         env['temp1'] = self.musq.get_first_line('/sys/devices/virtual/thermal/thermal_zone0/temp', strip=True)
         env['temp2'] = self.musq.get_first_line('/sys/devices/virtual/thermal/thermal_zone1/temp', strip=True)
         env['ip'] = self.get_all_ips()
-
         return env
 
     def get_all_if_data(self):
         nic = []
         for ix in socket.if_nameindex():
             name = ix[1]
-            record = self.get_data_for_if( name )
-            if (record != None):
-                nic.append( record )
-
+            record = self.get_data_for_if(name)
+            if record is not None:
+                nic.append(record)
         return (nic)
 
     def get_all_ips(self):
@@ -62,14 +60,14 @@ class platform_linux(platform_abstract.platform_abstract):
         for ix in socket.if_nameindex():
             name = ix[1]
             result = self.get_data_for_if( name )
-            if (result != None and result.get('ip') != None):
+            if result is not None and result.get('ip') is not None:
                 ip = result['ip']
-                if (ip[0:4] != "127."):
-                    nic.append( ip )
+                if ip[0:4] != "127.":
+                    nic.append(ip)
 
-        return (', '.join(nic))
+        return ', '.join(nic)
 
-    def get_data_for_if( self, ifname):
+    def get_data_for_if(self, ifname):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             info = fcntl.ioctl(
@@ -107,21 +105,20 @@ class platform_linux(platform_abstract.platform_abstract):
         nics = (sorted(nics, key=lambda k: (k['name']).lower() ))
         # TODO: maybe exclude bridges or check how to grab mac of components
         for nic in nics:
-            if ('eth' in nic['name'] or 'br' in nic['name']):
+            if 'eth' in nic['name'] or 'br' in nic['name']:
                 macs.append (nic['mac'])
         macs = (''.join(macs)).replace(":", "")
 
         input_str = ""
-        if (self.musq.settings.get('musq_id_salt_hostname') != None):
+        if self.musq.settings.get('musq_id_salt_hostname') is not None:
             input_str = env['hostname'] + ":"
-        if (self.musq.settings.get('musq_id_extra_salt') != None):
+        if self.musq.settings.get('musq_id_extra_salt') is not None:
             salt = str(self.musq.settings.get('musq_id_extra_salt'))
             input_str = input_str + salt + ":"
         input_str += self.name + ":" + serial + macs
         result = input_str
-        for i in range(1,9):
-            # print (result)
+        for i in range(1, 9):
             result = hashlib.md5(result.encode("UTF-8")).hexdigest().upper()
-        result=result[0:4]
+        result = result[0:4]
         logging.debug("Calculated system musq_id=%s from hash string \"%s\"" % (result, input_str))
         return result
