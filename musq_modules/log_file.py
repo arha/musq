@@ -32,7 +32,7 @@ class mm_log_file(abstract.mm_abstract):
         logging.debug("*** log_file linked!")
 
         target_file = self.settings.get("filename")
-        logging.debug("target file" + target_file)
+        logging.debug("target file " + target_file)
         self.file_ptr = open(target_file, 'ba+')
         #self.file_ptr.write(bytes("init\n", "UTF-8"))
         #self.file_ptr.write(bytes("init\n", "UTF-8"))

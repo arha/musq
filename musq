@@ -63,7 +63,7 @@ class musq():
             logging.info("Disconnected.")
 
     def on_connect(self, client, userdata, flags, rc):
-        logging.debug("Connected with result_code %s", str(rc))
+        logging.debug("MQTT connected (code %s)", str(rc))
         logging.debug("Sending subscribsption requests")
 
         if (self.subscriptions == None):
@@ -163,7 +163,8 @@ class musq():
                         logging.debug("Module disabled")
                         pass
                     module_instance = self.load_single_module(i['module'])
-                    glue_class = input_glue_module(key, i['topic'], module_instance)
+                    topic = i.get("topic") or None # todo: handle empty topics (ie, output modules only)
+                    glue_class = input_glue_module(key, topic, module_instance)
                     result = module_instance.link(self, i)
 
                     if ('thread' in i.keys()):

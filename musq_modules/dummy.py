@@ -20,3 +20,6 @@ class mm_dummy(abstract.mm_abstract):
 
     def set_creator(self, creator):
         self.creator = creator
+
+    def run(self):
+        """ dummy module, does nothing """
