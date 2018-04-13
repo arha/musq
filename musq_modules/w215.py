@@ -7,7 +7,7 @@ from time import sleep
 
 class mm_w215(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="w215"
+        self.internal_name="w215"
         self.last_send=time.time()
         self.last_send=0
 
@@ -23,8 +23,8 @@ class mm_w215(abstract.mm_abstract):
             self.sp.state = ON
         return
 
-    def link(self, creator, settings):
-        super(  mm_w215, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_w215, self).link(musq_instance, settings)
         logging.debug("*** w215 (%s) linked!", self.my_id)
 
         ip = self.settings.get("ip")
@@ -69,7 +69,7 @@ class mm_w215(abstract.mm_abstract):
                 message['type']='pub'
                 message['topic']='/test/module/thread/notbeat'
                 message['payload']=str(ts).encode('UTF-8')
-                self.creator.bug(self, message)
+                self.musq_instance.bug(self, message)
                 self.last_send=ts
         logging.debug("Thread finished on thread_test")
 
@@ -79,4 +79,4 @@ class mm_w215(abstract.mm_abstract):
         t1.start()
 
     def set_creator(self, creator):
-        self.creator = creator
+        self.musq_instance = creator

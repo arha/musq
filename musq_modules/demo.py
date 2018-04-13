@@ -12,14 +12,6 @@ class mm_demo(abstract.mm_abstract):
         logging.debug("config_line=" + config_line)
         logging.debug("id = %s", self.my_id)
 
-    def link(self, creator, settings):
-        super(  mm_demo, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_demo, self).link(musq_instance, settings)
         logging.debug("demo (%s) linked!", self.my_id)
-
-    def set_creator(self, creator):
-        # self.creator = creator
-        pass
-
-    def set_settings(self, settings):
-        # self.__settings = settings
-        pass

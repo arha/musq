@@ -6,7 +6,7 @@ from time import sleep
 
 class mm_thread_test(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="thread_test"
+        self.internal_name="thread_test"
         self.last_send=time.time()
         self.last_send=0
 
@@ -17,8 +17,8 @@ class mm_thread_test(abstract.mm_abstract):
         logging.debug("message=" + message.payload.decode('UTF-8'))
         logging.debug("config_line=" + config_line)
 
-    def link(self, creator, settings):
-        super(  mm_thread_test, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_thread_test, self).link(musq_instance, settings)
         logging.debug("thread_demo linked!")
 
     def main(self):
@@ -31,7 +31,7 @@ class mm_thread_test(abstract.mm_abstract):
                 message['type']='pub'
                 message['topic']='/test/module/thread/notbeat'
                 message['payload']=str(ts).encode('UTF-8')
-                self.creator.bug(self, message)
+                self.musq_instance.bug(self, message)
                 self.last_send=ts
         logging.debug("Thread finished on thread_test")
 
@@ -41,4 +41,4 @@ class mm_thread_test(abstract.mm_abstract):
         t1.start()
 
     def set_creator(self, creator):
-        self.creator = creator
+        self.musq_instance = creator

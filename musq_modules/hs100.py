@@ -7,7 +7,7 @@ from pyHS100 import SmartPlug
 
 class mm_hs100(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="hs100"
+        self.internal_name="hs100"
         self.last_send=time.time()
         self.last_send=0
 
@@ -22,8 +22,8 @@ class mm_hs100(abstract.mm_abstract):
             self.sp.turn_off()
         return
 
-    def link(self, creator, settings):
-        super(  mm_hs100, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_hs100, self).link(musq_instance, settings)
         logging.debug("*** hs100 linked!")
 
         ip = self.settings.get("ip")
@@ -59,4 +59,4 @@ class mm_hs100(abstract.mm_abstract):
         t1.start()
 
     def set_creator(self, creator):
-        self.creator = creator
+        self.musq_instance = creator

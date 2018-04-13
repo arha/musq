@@ -8,7 +8,7 @@ import socketserver
 
 class mm_http_server(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="http_server"
+        self.internal_name="http_server"
         self.last_send=time.time()
         self.last_send=0
 
@@ -44,8 +44,8 @@ class mm_http_server(abstract.mm_abstract):
         logging.debug("message=" + message.payload.decode('UTF-8'))
         logging.debug("config_line=" + config_line)
 
-    def link(self, creator, settings):
-        super(  mm_http_server, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_http_server, self).link(musq_instance, settings)
         self.configure_routes()
         logging.debug("http_server linked!")
 
@@ -77,7 +77,7 @@ class mm_http_server(abstract.mm_abstract):
             if topic != None:
                 qos = 2
                 retain = False
-                self.creator.raw_publish(self, result, topic, qos, retain )
+                self.musq_instance.raw_publish(self, result, topic, qos, retain )
                 # todo return code, improve checking based on methods
                 return 200
             else:
@@ -91,7 +91,7 @@ class mm_http_server(abstract.mm_abstract):
         t1.start()
 
     def set_creator(self, creator):
-        self.creator = creator
+        self.musq_instance = creator
 
 class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     server_version = "musq/0.1"

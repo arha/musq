@@ -9,7 +9,7 @@ from pyA20.gpio import port
 
 class mm_opione(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="opione"
+        self.internal_name="opione"
         self.last_send = 0
         gpio.init()
         # gpio.setcfg(port.PG7, gpio.INPUT)
@@ -149,19 +149,19 @@ class mm_opione(abstract.mm_abstract):
             gpio.pullup(pin, gpio.PULLUP)
             logging.debug("Set pin %s to weak hi (input, pullup)" % (pin_name))
 
-    def link(self, creator, settings):
-        super(  mm_opione, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_opione, self).link(musq_instance, settings)
         logging.debug("opione linked!")
-        self.creator.get_env_data() 
+        self.musq_instance.get_env_data()
 
-        self.autotopic="/musq/dev/" + self.creator.musq_id
+        self.autotopic="/musq/dev/" + self.musq_instance.musq_id
 
     def setup_autotopic(self):
-        logging.debug("Setting up autotopic for %s (id=%s)" % (self.prefix, self.my_id))
+        logging.debug("Setting up autotopic for %s (id=%s)" % (self.internal_name, self.my_id))
         messages = []
 
-        e = self.creator.get_env_data() 
-        messages.append( { 'message': self.creator.formatted_time(), 'topic': 'time_init', 'qos': 2, 'retained': True} )
+        e = self.musq_instance.get_env_data()
+        messages.append( { 'message': self.musq_instance.formatted_time(), 'topic': 'time_init', 'qos': 2, 'retained': True} )
         messages.append( { 'message': e['serial'], 'topic': 'serial_number', 'qos': 2, 'retained': True} )
         messages.append( { 'message': e['hostname'], 'topic': 'hostname', 'qos': 2, 'retained': True} )
         messages.append( { 'message': e['uptime'], 'topic': 'uptime', 'qos': 2, 'retained': True} )
@@ -172,14 +172,14 @@ class mm_opione(abstract.mm_abstract):
         messages.append( { 'message': e['temp1'], 'topic': 'temp1', 'qos': 2, 'retained': True} )
         messages.append( { 'message': e['temp2'], 'topic': 'temp2', 'qos': 2, 'retained': True} )
         for m in messages:
-            self.creator.self_publish(self, m['message'], m['topic'], m['qos'], m['retained'])
+            self.musq_instance.self_publish(self, m['message'], m['topic'], m['qos'], m['retained'])
     
     def delete_autotopic(self):
         topics = ['time_init', 'serial_number', 'hostname', 'uptime', 'cpu', 'hardware', 'ip', 'temp', 'temp1', 'temp2', 'gpio/target', 'gpio/write', 'gpio/read']
         # for key, val in self.pinmap.items():
         #    topics.append('GPIO/' + key)
         for m in topics:
-            self.creator.self_publish(self, '', m, qos=2, retain=True)
+            self.musq_instance.self_publish(self, '', m, qos=2, retain=True)
     
     def signal_exit(self):
         super(  mm_opione, self).signal_exit()
@@ -197,15 +197,15 @@ class mm_opione(abstract.mm_abstract):
                 data = "-1" 
                 with open("/etc/armbianmonitor/datasources/soctemp", "r") as file:
                     data=file.readline()
-                data = self.creator.get_first_line("/etc/armbianmonitor/datasources/soctemp", strip=True)
+                data = self.musq_instance.get_first_line("/etc/armbianmonitor/datasources/soctemp", strip=True)
                 self.last_send=ts
-                self.creator.heartbeat()
-                self.creator.self_publish(self, data, 'temp', qos=2, retain=True)
+                self.musq_instance.heartbeat()
+                self.musq_instance.self_publish(self, data, 'temp', qos=2, retain=True)
         logging.debug("Thread finished on thread_test")
 
     def run(self):
-        if (self.creator == -1):
-            logging.error("*** Error in %s (id=%s), object not linked, refusing thread start." % (self.prefix, self.my_id))
+        if (self.musq_instance == -1):
+            logging.error("*** Error in %s (id=%s), object not linked, refusing thread start." % (self.internal_name, self.my_id))
             return
 
         self.thread_sleep = int(self.settings.get("thread_sleep")) or 10

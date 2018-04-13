@@ -46,7 +46,7 @@ class mm_pizero(abstract.mm_abstract):
                 message['type']='pub'
                 message['topic']='/example/pizero/temperature'
                 message['payload']=str(data).encode('UTF-8')
-                self.creator.bug(self, message)
+                self.musq_instance.bug(self, message)
                 self.last_send=ts
         logging.debug("Thread finished on thread_test")
 
@@ -55,9 +55,9 @@ class mm_pizero(abstract.mm_abstract):
         t1 = threading.Thread(target=self.main)
         t1.start()
 
-    def link(self, creator, settings):
-        super(  mm_pizero, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_pizero, self).link(musq_instance, settings)
         logging.debug("pizero linked!")
 
     def set_creator(self, creator):
-        self.creator = creator
+        self.musq_instance = creator

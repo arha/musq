@@ -1,12 +1,10 @@
 #!/usr/bin/python3 
 import subprocess, os, yaml, shlex, argparse, importlib, logging, sys, time, signal, re
-import hashlib                  # with which we create a short hash to identify ourselves in /musq/heartbeat
 import paho.mqtt.client as mqtt
 
 from os import listdir
 from os.path import isfile, join
 
-from musq_modules import abstract
 from glue_classes import input_glue_script, output_glue_pipe, output_glue, input_glue_module
 
 class musq():
@@ -49,6 +47,7 @@ class musq():
         logging.info('musq starting; musq_id = %s' % (self.musq_id))
 
         self.mod_list = self.reload_modules()
+        self.mod_list_new = self.load_modules_new()
 
     def on_publish(self, client, userdata, mid):
         if (self.killer.kill_now):
@@ -94,6 +93,44 @@ class musq():
         if (self.kill_heartbeat_id == None):
             val = self.raw_publish(self, '', "/musq/heartbeat/" + self.musq_id, 2, True)
             self.kill_heartbeat_id = val[1]
+
+    def load_modules_new(self):
+        print(self.settings.get("modules"))
+        modules = {}
+        for instance_name, settings in self.settings.get("modules").items():
+            if settings and settings.get("module"):
+                module_name = settings.get("module")
+                if isfile(self.mod_path + module_name + ".py"):
+                    # don't load a disabled module
+                    if (('off' in settings) or ('disabled' in settings)):
+                        logging.info("Not loading %s (%s), disabled in config file" % (instance_name, module_name))
+                        pass
+                    # instantiate it
+                    instance = self.load_single_module(module_name)
+                    instance.instance_name = instance_name
+                    modules[instance_name] = instance
+                    # "link" it: configure parent instance, pass the module its settings
+                    instance.link(self, settings)
+                    # and now check if it is threadable
+                    wants_thread = getattr(instance, "run", None)
+                    if wants_thread:
+                        if settings.get('dev_autostart_thread') and ( settings.get('dev_autostart_thread') is False or  settings.get('dev_autostart_thread') is 0 ):
+                            logging.warning("Module %s (%s) may not work, thread autostart disabled by dev_autostart_thread option" % (instance_name, module_name))
+                        else:
+                            logging.info("Starting thread for %s (%s)" % (instance_name, module_name))
+                            instance.run()
+                else:
+                    logging.warning("%s requires an invalid/non-existent module: %s" % (instance_name, module_name))
+
+        #print(modules)
+
+        result_str = []
+        for key, module in modules.items():
+            result_str.append(module.instance_name + " (" + module.internal_name + ")")
+
+        logging.info("Loaded: %s", ", ".join(result_str))
+        #sys.exit()
+        return modules
 
     def reload_modules(self):
         logging.info("Reloading modules...")
@@ -286,10 +323,10 @@ class musq():
                 self.raw_publish(sender, message['payload'], message['topic'], 1, False)
 
     def raw_publish(self, sender, message, topic, qos=0, retain=False):
-        retain_log = "R" if retain else "N"        
-        retian_log = "X" if (retain and message == '') else "R"
+        retain_log = ("R" if retain else "N")
+        retain_log = ("X" if (retain and message == '') else "R")
         if (type(sender) is not musq):
-            logging.debug("pub [raw!] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.prefix, sender.my_id or None, retain_log, qos, topic, message) )
+            logging.debug("pub [raw!] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.internal_name, sender.my_id or None, retain_log, qos, topic, message) )
         else:
             logging.debug("pub [raw!] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % ("musq", "musq", retain_log, qos, topic, message) )
         return self.mqtt_client.publish(topic, message, qos, retain)
@@ -298,9 +335,9 @@ class musq():
         if (topic[0] != "/"):
             topic = "/" + topic
         topic = sender.autotopic + topic
-        retain_log = "R" if retain else "N"        
-        retian_log = "X" if (retain and message == '') else "R"
-        logging.debug("pub [self] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.prefix, sender.my_id, retain_log, qos, topic, message) )
+        retain_log = ("R" if retain else "N")
+        retain_log = ("X" if (retain and message == '') else "R")
+        logging.debug("pub [self] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.internal_name, sender.my_id, retain_log, qos, topic, message) )
 
         if (topic == None and sender.autotopic == None):
             return False
@@ -315,7 +352,7 @@ class musq():
 
     def set_testament(self, sender, message, topic, qos=0, retain=False):
         retain_log = "R" if retain else "N"        
-        logging.debug("last will & testament from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.prefix, sender.my_id, retain_log, qos, topic, message) )
+        logging.debug("last will & testament from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.internal_name, sender.my_id, retain_log, qos, topic, message) )
         self.mqtt_client.will_set(topic, message, qos, retain)
 
     def formatted_time(self):
