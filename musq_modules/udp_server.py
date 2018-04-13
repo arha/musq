@@ -27,6 +27,9 @@ class mm_udp_server(abstract.mm_abstract):
         self.prefix="udp_server"
         self.last_send=time.time()
         self.last_send=0
+        self.qos = 0
+        self.retain = False
+        self.topic = None
 
     def call(self, topic, trigger_topic, message, config_line):
         logging.warning(topic, trigger_topic, message, "aaa")
@@ -37,23 +40,36 @@ class mm_udp_server(abstract.mm_abstract):
         logging.debug("udp_server linked!")
 
     def main(self):
-        port = int(self.settings.get("port")) or 7070
-        if (self.settings.get("ip")) == None:
+        self.port = int(self.settings.get("port"))
+        if not self.port:
+            logging.warning("No listening port configured, will default to 7070 but a second udp server will be unable to use 7070")
+            self.port = 7070
+        if not self.settings.get("ip"):
             logging.warning("No listening IP configured for udp server, defaulting to 0.0.0.0")
             ip = "0.0.0.0"
         else:
             ip = self.settings.get("ip")
         handler = MusqUDPHandler
         self.topic = self.settings.get("topic")
-        if self.topic == None:
-            logging.error("No UDP topic configured, will default to /musq/%s/udp/%s" % ( self.creator.musq_id, self.get_id()  ) )
+        self.qos = self.settings.get("qos") or 0
+        self.retain = self.settings.get("retain") or False
+
+        if self.qos != 0 and self.qos != 1 and self.qos != 2:
+            self.qos = 0
+            logging.warning("Invalid value QOS=%s for UDP server, defaulting to 0" % self.qos)
+
+        if self.retain != True and self.retain != False:
+            self.retain = False
+
+        if not self.topic:
+            logging.warning("No UDP topic configured, will default to /musq/%s/udp/%s" % ( self.creator.musq_id, self.get_id()  ) )
             self.topic = "/musq/%s/udp/%s" %  ( self.creator.musq_id, self.get_id()  )
 
-        with socketserver.UDPServer(("", port), handler) as udpd:
+        with socketserver.UDPServer(("", self.port), handler) as udpd:
             udpd.parent = self
-            logging.info("Starting musq UDP server on 0.0.0.0:%d", port)
+            logging.info("Starting musq UDP server on 0.0.0.0:%d", self.port)
             udpd.serve_forever()
-        logging.debug("Thread finished on UDP_server")
+        logging.debug("Thread finished on UDP server")
         return
 
     def process_message(self, handler):
@@ -61,9 +77,7 @@ class mm_udp_server(abstract.mm_abstract):
         datagram = handler.rfile.readline().strip()
         logging.debug("Received UDP message, ip=%s: %s" % (ip, datagram))
 
-        qos = 2
-        retain = False
-        self.creator.raw_publish(self, datagram, self.topic, qos, retain )
+        self.creator.raw_publish(self, datagram, self.topic, self.qos, self.retain )
 
     def run(self):
         logging.debug("thread start for udp_server")
