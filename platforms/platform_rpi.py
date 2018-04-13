@@ -76,19 +76,19 @@ class platform_rpi(platform_linux.platform_linux):
             self.hat_name = product.rstrip('\0')
 
         if (self.hat != Rpi_hats.NONE):
-            logging.info("Detected RPi hat: %s " % ( self.hat))
+            logging.info("Detected RPi hat: %s " % self.hat)
             self.hat_setup()
 
     def hat_setup(self):
-        logging.debug("Setting up hat %s" % (self.hat_name))
+        logging.debug("Setting up hat %s" % self.hat_name)
 
     def get_all_if_data(self):
         nic = []
         for ix in socket.if_nameindex():
             name = ix[1]
-            record = self.get_data_for_if( name )
+            record = self.get_data_for_if(name
             if (record != None):
-                nic.append( record )
+                nic.append(record)
         return (nic)
 
     def get_all_ips(self):
