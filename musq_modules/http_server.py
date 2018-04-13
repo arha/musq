@@ -118,15 +118,15 @@ class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         self._set_headers()
-        self.server.parent.perform_route(self.path, self.headers, self.client_address)
+        self.server.parent.perform_route(self)
 
     def do_PUT(self):
         self._set_headers()
-        self.server.parent.perform_route(self.path, self.headers, self.client_address)
+        self.server.parent.perform_route(self)
 
     def do_DELETE(self):
         self._set_headers()
-        self.server.parent.perform_route(self.path, self.headers, self.client_address)
+        self.server.parent.perform_route(self)
 
     def log_message(self, format, *args):
         return
