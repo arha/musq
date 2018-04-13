@@ -31,7 +31,7 @@ class mm_udp_server(abstract.mm_abstract):
         self.retain = False
         self.topic = None
 
-    def call(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         logging.warning(topic, trigger_topic, message, "aaa")
         return
 
@@ -63,7 +63,7 @@ class mm_udp_server(abstract.mm_abstract):
 
         if not self.topic:
             logging.warning("No UDP topic configured, will default to /musq/%s/udp/%s" % ( self.musq_instance.musq_id, self.get_id()  ) )
-            self.topic = "/musq/%s/udp/%s" %  ( self.musq_instance.musq_id, self.get_id()  )
+            self.topic = [ "/musq/%s/udp/%s" %  ( self.musq_instance.musq_id, self.get_id()  ) ]
 
         with socketserver.UDPServer(("", self.port), handler) as udpd:
             udpd.parent = self

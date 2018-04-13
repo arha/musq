@@ -21,6 +21,11 @@ class platform_nanopi_neo(platform_linux.platform_linux):
     def signal_exit(self):
         super(  platform_nanopi_neo, self).setup()
 
+    def get_env_data(self):
+        result = super(  platform_nanopi_neo, self).get_env_data()
+        result.update({"platform": "nanopi neo"})
+        return result
+
     def platform_detect_extended(self):
         self.model_string = ""
         self.model = nanopi_neo_board.UNKNOWN

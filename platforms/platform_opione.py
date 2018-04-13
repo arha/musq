@@ -16,6 +16,10 @@ class platform_opione(platform_linux.platform_linux):
     def signal_exit(self):
         super(  platform_opione, self).setup()
 
+    def get_env_data(self):
+        result = super(  platform_opione, self).get_env_data()
+        result.update({"platform": "orange pi one"})
+        return result
 
     def get_all_if_data(self):
         nic = []

@@ -37,7 +37,7 @@ class mm_http_server(abstract.mm_abstract):
                     route_dict["topic"] = data.get("topic").strip()
                     self.routes[route] = route_dict
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         return
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)

@@ -8,9 +8,9 @@ from time import sleep
 class mm_pizero(abstract.mm_abstract):
     def __init__(self):
         prefix="pizero"
-        self.last_send=0
+        self.last_send = 0
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         logging.debug("message=" + message.payload.decode('UTF-8'))
@@ -42,11 +42,9 @@ class mm_pizero(abstract.mm_abstract):
                 with open("/sys/class/thermal/thermal_zone0/temp", "r") as file:
                     data=file.readline()
                     data = round(float(data) / 1000, 1)
-                message = {}
-                message['type']='pub'
-                message['topic']='/example/pizero/temperature'
-                message['payload']=str(data).encode('UTF-8')
-                self.musq_instance.bug(self, message)
+                topic='/example/pizero/temperature'
+                message=str(data).encode('UTF-8')
+                self.musq_instance.raw_publish(self, message, topic)
                 self.last_send=ts
         logging.debug("Thread finished on thread_test")
 

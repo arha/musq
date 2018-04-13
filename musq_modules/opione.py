@@ -68,7 +68,7 @@ class mm_opione(abstract.mm_abstract):
             print ("config topic")
             return { "matching_topic": "config", "parts": None }
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         # logging.debug("message=" + message.payload.decode('UTF-8'))

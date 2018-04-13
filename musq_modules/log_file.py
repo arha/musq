@@ -14,7 +14,7 @@ class mm_log_file(abstract.mm_abstract):
         self.__sp = ""
         self.file_ptr = None
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         m=message.payload.decode('UTF-8')
         if (self.file_ptr != None):
             log_str = ("%s, topic [%s]: %s\n" % (self.musq_instance.formatted_time(), trigger_topic, m))

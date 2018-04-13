@@ -55,6 +55,11 @@ class platform_rpi(platform_linux.platform_linux):
 
         logging.debug("RPi model: %s (%s)" % (self.model, self.model_string))
 
+    def get_env_data(self):
+        result = super(  platform_rpi, self).get_env_data()
+        result.update({"platform": "raspberry pi"})
+        return result
+
     def platform_detect_hat(self):
         # https://www.raspberrypi.org/forums/viewtopic.php?t=108134
         # https://raspberrypi.stackexchange.com/questions/39153/how-to-detect-what-kind-of-hat-or-gpio-board-is-plugged-in-if-any
