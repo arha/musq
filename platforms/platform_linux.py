@@ -41,7 +41,7 @@ class platform_linux(platform_abstract.platform_abstract):
         env['temp'] = self.musq.get_first_line('/etc/armbianmonitor/datasources/soctemp', strip=True)
         env['temp1'] = self.musq.get_first_line('/sys/devices/virtual/thermal/thermal_zone0/temp', strip=True)
         env['temp2'] = self.musq.get_first_line('/sys/devices/virtual/thermal/thermal_zone1/temp', strip=True)
-        env['ip'] = self.platform.get_all_ips()
+        env['ip'] = self.get_all_ips()
 
         return env
 
