@@ -18,7 +18,6 @@ class mm_thread_test(abstract.mm_abstract):
         logging.debug("thread_test linked!")
 
     def main(self):
-        # entry point for the thread
         while True:
             sleep(0.25)
             ts = time.time()
@@ -33,6 +32,3 @@ class mm_thread_test(abstract.mm_abstract):
         logging.debug("thread start")
         t1 = threading.Thread(target=self.main)
         t1.start()
-
-    def set_creator(self, creator):
-        self.musq_instance = creator

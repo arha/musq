@@ -47,20 +47,19 @@ class mm_w215(abstract.mm_abstract):
             self.sp = None
             return False
 
-        if self.sp != None and self.sp._error_report != False:
+        if self.sp is not None and self.sp._error_report is not False:
             logging.info("w215 at %s with pin %s failed to connect", ip, pin)
             return False
 
-        if self.sp != None:
+        if self.sp is not None:
             logging.debug("*** connected to w215 plug at %s", self.settings['ip'])
             logging.debug("*** w215 (%s) linked!", self.my_id)
 
     def main(self):
-        # entry point for the thread
         while True:
             sleep (0.25)
             ts = time.time()
-            if (ts - self.last_send > 5):
+            if ts - self.last_send > 5:
                 self.last_send=ts
         logging.debug("Thread finished on thread_test")
 
@@ -68,6 +67,3 @@ class mm_w215(abstract.mm_abstract):
         logging.debug("thread start")
         t1 = threading.Thread(target=self.main)
         t1.start()
-
-    def set_creator(self, creator):
-        self.musq_instance = creator

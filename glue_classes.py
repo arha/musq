@@ -7,9 +7,6 @@ class output_glue:
     __type = ""
     creator = None
 
-    def set_creator(self, creator):
-        self.creator = creator
-
 class output_glue_pipe(output_glue):
     path = ""
     create = True

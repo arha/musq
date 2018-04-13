@@ -7,7 +7,7 @@ from time import sleep
 
 class mm_pizero(abstract.mm_abstract):
     def __init__(self):
-        prefix="pizero"
+        prefix = "pizero"
         self.last_send = 0
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
@@ -30,12 +30,12 @@ class mm_pizero(abstract.mm_abstract):
                 if (m == "0"):
                     with open("/sys/class/leds/led0/brightness", "w") as file:
                         file.write("1")
+
     def main(self):
-        # entry point for the thread
         while True:
             sleep (1)
             ts = time.time()
-            if (ts - self.last_send > 10):
+            if ts - self.last_send > 10:
                 logging.debug("pizero thread: reading temperature")
                 data = "-1" 
                 # /sys/devices/virtual/thermal/thermal_zone{0,1}/temp
@@ -56,6 +56,3 @@ class mm_pizero(abstract.mm_abstract):
     def link(self, musq_instance, settings):
         super(mm_pizero, self).link(musq_instance, settings)
         logging.debug("pizero linked!")
-
-    def set_creator(self, creator):
-        self.musq_instance = creator

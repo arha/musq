@@ -84,8 +84,6 @@ class mm_udp_server(abstract.mm_abstract):
         t1 = threading.Thread(target=self.main)
         t1.start()
 
-    def set_creator(self, creator):
-        self.musq_instance = creator
 
 class MusqUDPHandler(socketserver.DatagramRequestHandler):
     def handle(self):

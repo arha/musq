@@ -54,6 +54,3 @@ class mm_unicorn(abstract.mm_abstract):
     def link(self, musq_instance, settings):
         super(mm_unicorn, self).link(musq_instance, settings)
         logging.debug("unicorn linked!")
-
-    def set_creator(self, creator):
-        self.musq_instance = creator
