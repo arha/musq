@@ -9,7 +9,7 @@ except ImportError: # Python 2
 
 class mm_http_client(abstract.mm_abstract):
     def __init__(self):
-        prefix="http_request"
+        self.internal_name="http_request"
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
         input_data = message.payload.decode("UTF-8")
