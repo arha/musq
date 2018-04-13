@@ -19,13 +19,13 @@ class platform_linux(platform_abstract.platform_abstract):
     def get_env_data(self):
         env = super(  platform_linux, self).get_env_data()
         env.update({"platform": "linux generic"})
-        val = (self.get_from_shell("hostname")).strip()
-        # val = (self.get_from_shell("hostname").decode("UTF-8")).strip()
+        val = (self.musq.get_from_shell("hostname")).strip()
+        # val = (self.musq.get_from_shell("hostname").decode("UTF-8")).strip()
         if (val == ""):
             val = "unknown"
         env['hostname']  = val
 
-        env['uptime'] = self.get_from_shell(" awk '{print int($1)}' /proc/uptime")
+        env['uptime'] = self.musq.get_from_shell(" awk '{print int($1)}' /proc/uptime")
 
         command = "cat /proc/cpuinfo"
         all_info = subprocess.check_output(command, shell=True).strip()
@@ -38,9 +38,9 @@ class platform_linux(platform_abstract.platform_abstract):
             if "Serial" in line:
                 env['serial']=(re.sub( ".*Serial.*:", "", line, 1)).strip()
 
-        env['temp'] = self.get_first_line('/etc/armbianmonitor/datasources/soctemp', strip=True)
-        env['temp1'] = self.get_first_line('/sys/devices/virtual/thermal/thermal_zone0/temp', strip=True)
-        env['temp2'] = self.get_first_line('/sys/devices/virtual/thermal/thermal_zone1/temp', strip=True)
+        env['temp'] = self.musq.get_first_line('/etc/armbianmonitor/datasources/soctemp', strip=True)
+        env['temp1'] = self.musq.get_first_line('/sys/devices/virtual/thermal/thermal_zone0/temp', strip=True)
+        env['temp2'] = self.musq.get_first_line('/sys/devices/virtual/thermal/thermal_zone1/temp', strip=True)
         env['ip'] = self.platform.get_all_ips()
 
         return env
