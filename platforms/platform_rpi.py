@@ -55,6 +55,11 @@ class platform_rpi(platform_linux.platform_linux):
 
         logging.debug("RPi model: %s (%s)" % (self.model, self.model_string))
 
+    def get_env_data(self):
+        result = super(  platform_rpi, self).get_env_data()
+        result.update({"platform": "raspberry pi"})
+        return result
+
     def platform_detect_hat(self):
         # https://www.raspberrypi.org/forums/viewtopic.php?t=108134
         # https://raspberrypi.stackexchange.com/questions/39153/how-to-detect-what-kind-of-hat-or-gpio-board-is-plugged-in-if-any
@@ -71,19 +76,19 @@ class platform_rpi(platform_linux.platform_linux):
             self.hat_name = product.rstrip('\0')
 
         if (self.hat != Rpi_hats.NONE):
-            logging.info("Detected RPi hat: %s " % ( self.hat))
+            logging.info("Detected RPi hat: %s " % self.hat)
             self.hat_setup()
 
     def hat_setup(self):
-        logging.debug("Setting up hat %s" % (self.hat_name))
+        logging.debug("Setting up hat %s" % self.hat_name)
 
     def get_all_if_data(self):
         nic = []
         for ix in socket.if_nameindex():
             name = ix[1]
-            record = self.get_data_for_if( name )
+            record = self.get_data_for_if(name
             if (record != None):
-                nic.append( record )
+                nic.append(record)
         return (nic)
 
     def get_all_ips(self):

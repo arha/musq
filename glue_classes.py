@@ -1,5 +1,4 @@
-import os, shlex
-import subprocess, os, yaml, shlex, sys
+import subprocess, os, shlex
 import traceback
 import logging
 
@@ -7,9 +6,6 @@ class output_glue:
     name = ""
     __type = ""
     creator = None
-
-    def set_creator(self, creator):
-        self.creator = creator
 
 class output_glue_pipe(output_glue):
     path = ""
@@ -44,7 +40,7 @@ class input_glue:
     creator = None
     module = None
 
-    def __init__():
+    def __init__(self):
         pass
 
     def topic_matches_sub(self, sub, topic):
@@ -166,4 +162,4 @@ class input_glue_module(input_glue):
     def execute(self, topic_received, msg):
         if (self.topic != None and self.topic_matches_sub(self.topic, topic_received)):
             logging.debug("Calling module: " + self.name + "; topic received: " + topic_received)
-            self.module.call(self.topic, topic_received, msg, "x config line")
+            self.module.on_message_received(self.topic, topic_received, msg, "x config line")

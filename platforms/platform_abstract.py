@@ -12,3 +12,6 @@ class platform_abstract:
 
     def signal_exit(self):
         pass
+
+    def get_env_data(self):
+        return {"platform": "abstract"}

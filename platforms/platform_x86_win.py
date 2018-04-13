@@ -19,3 +19,8 @@ class platform_x86_win(platform_abstract.platform_abstract):
 
     def generate_musq_id(self):
         return "W_86"
+
+    def get_env_data(self):
+        result = super(  platform_x86_win, self).get_env_data()
+        result.update({"platform": "windows"})
+        return result

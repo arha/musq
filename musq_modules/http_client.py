@@ -11,10 +11,10 @@ class mm_http_client(abstract.mm_abstract):
     def __init__(self):
         prefix="http_request"
 
-    def call(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         input_data = message.payload.decode("UTF-8")
 
-        if (self.settings.get('url') != None):
+        if self.settings.get('url') is not None:
             url = self.settings.get('url')
             if url[0:7] != "http://":
                 url = "http://" + url
@@ -31,13 +31,13 @@ class mm_http_client(abstract.mm_abstract):
             (resp_headers, result) = h.request(url, method, data)
 
             publish_result = self.settings.get('publish_result')
-            if publish_result != None and publish_result != trigger_topic:
+            if publish_result is not None and publish_result != trigger_topic:
                 logging.info("Publishing result to %s" % publish_result)
-                publish_qos = self.settings.get('publish_qos') or 1
+                publish_qos = self.settings.get('publish_qos') or 0
                 publish_retain = self.settings.get("publish_retain") or False
-                self.creator.raw_publish(self, result, publish_result, publish_qos, publish_retain )
-            elif (publish_result == trigger_topic):
+                self.musq_instance.raw_publish(self, result, publish_result, publish_qos, publish_retain)
+            elif publish_result == trigger_topic:
                 logging.error("will *NOT* publish result of request received on [%s] to [%s] - will cause a loopback" % (trigger_topic, publish_result))
 
-    def link(self, creator, settings):
-        super(  mm_http_client, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_http_client, self).link(musq_instance, settings)

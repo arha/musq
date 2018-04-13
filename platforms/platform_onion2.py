@@ -16,3 +16,8 @@ class platform_onion2(platform_linux.platform_linux):
 
     def signal_exit(self):
         super(  platform_onion2, self).setup()
+
+    def get_env_data(self):
+        result = super(  platform_onion2, self).get_env_data()
+        result.update({"platform": "omega onion2"})
+        return result

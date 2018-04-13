@@ -7,17 +7,17 @@ from time import sleep
 
 class mm_log_file(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="log_file"
+        self.internal_name="log_file"
         self.last_send=time.time()
         self.last_send=0
 
         self.__sp = ""
         self.file_ptr = None
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         m=message.payload.decode('UTF-8')
         if (self.file_ptr != None):
-            log_str = ("%s, topic [%s]: %s\n" % (self.creator.formatted_time(), trigger_topic, m))
+            log_str = ("%s, topic [%s]: %s\n" % (self.musq_instance.formatted_time(), trigger_topic, m))
 
             target_file = self.settings.get("filename")
             self.file_ptr = open(target_file, 'ba+')
@@ -27,8 +27,8 @@ class mm_log_file(abstract.mm_abstract):
             logging.debug("log_file output: " + log_str)
         return
 
-    def link(self, creator, settings):
-        super(  mm_log_file, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_log_file, self).link(musq_instance, settings)
         logging.debug("*** log_file linked!")
 
         target_file = self.settings.get("filename")

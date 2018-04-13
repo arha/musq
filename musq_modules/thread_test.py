@@ -6,39 +6,29 @@ from time import sleep
 
 class mm_thread_test(abstract.mm_abstract):
     def __init__(self):
-        self.prefix="thread_test"
-        self.last_send=time.time()
-        self.last_send=0
+        self.internal_name = "thread_test"
+        self.last_send = time.time()
+        self.last_send = 0
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         return
-        logging.debug("topic=" + topic)
-        logging.debug("trigger_topic=" + trigger_topic)
-        logging.debug("message=" + message.payload.decode('UTF-8'))
-        logging.debug("config_line=" + config_line)
 
-    def link(self, creator, settings):
-        super(  mm_thread_test, self).link(creator, settings)
-        logging.debug("thread_demo linked!")
+    def link(self, musq_instance, settings):
+        super(mm_thread_test, self).link(musq_instance, settings)
+        logging.debug("thread_test linked!")
 
     def main(self):
-        # entry point for the thread
-        while True:
-            sleep (0.25)
+        while True and not self.kill_thread:
+            sleep(0.25)
             ts = time.time()
-            if (ts - self.last_send > 5):
-                message = {}
-                message['type']='pub'
-                message['topic']='/test/module/thread/notbeat'
-                message['payload']=str(ts).encode('UTF-8')
-                self.creator.bug(self, message)
-                self.last_send=ts
+            if ts - self.last_send > 5:
+                topic = '/test/module/thread/notbeat'
+                message = str(ts).encode('UTF-8')
+                self.musq_instance.raw_publish(self, message, topic)
+                self.last_send = ts
         logging.debug("Thread finished on thread_test")
 
     def run(self):
         logging.debug("thread start")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
-
-    def set_creator(self, creator):
-        self.creator = creator
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()

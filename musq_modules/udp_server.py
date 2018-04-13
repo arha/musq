@@ -24,19 +24,19 @@ class mm_udp_server(abstract.mm_abstract):
     https://stackoverflow.com/questions/27560549/when-mqtt-sn-should-be-used-how-is-it-different-from-mqtt
     """
     def __init__(self):
-        self.prefix="udp_server"
+        self.internal_name="udp_server"
         self.last_send=time.time()
         self.last_send=0
         self.qos = 0
         self.retain = False
         self.topic = None
 
-    def call(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         logging.warning(topic, trigger_topic, message, "aaa")
         return
 
-    def link(self, creator, settings):
-        super(  mm_udp_server, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_udp_server, self).link(musq_instance, settings)
         logging.debug("udp_server linked!")
 
     def main(self):
@@ -62,8 +62,8 @@ class mm_udp_server(abstract.mm_abstract):
             self.retain = False
 
         if not self.topic:
-            logging.warning("No UDP topic configured, will default to /musq/%s/udp/%s" % ( self.creator.musq_id, self.get_id()  ) )
-            self.topic = "/musq/%s/udp/%s" %  ( self.creator.musq_id, self.get_id()  )
+            logging.warning("No UDP topic configured, will default to /musq/%s/udp/%s" % ( self.musq_instance.musq_id, self.get_id()  ) )
+            self.topic = [ "/musq/%s/udp/%s" %  ( self.musq_instance.musq_id, self.get_id()  ) ]
 
         with socketserver.UDPServer(("", self.port), handler) as udpd:
             udpd.parent = self
@@ -77,15 +77,13 @@ class mm_udp_server(abstract.mm_abstract):
         datagram = handler.rfile.readline().strip()
         logging.debug("Received UDP message, ip=%s: %s" % (ip, datagram))
 
-        self.creator.raw_publish(self, datagram, self.topic, self.qos, self.retain )
+        self.musq_instance.raw_publish(self, datagram, self.topic, self.qos, self.retain )
 
     def run(self):
         logging.debug("thread start for udp_server")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()
 
-    def set_creator(self, creator):
-        self.creator = creator
 
 class MusqUDPHandler(socketserver.DatagramRequestHandler):
     def handle(self):

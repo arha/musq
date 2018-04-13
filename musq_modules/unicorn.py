@@ -12,7 +12,7 @@ class mm_unicorn(abstract.mm_abstract):
         unicorn.brightness(1)
         width,height=unicorn.get_shape()
 
-    def call(self, topic, trigger_topic, message, config_line): 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         logging.debug("message=" + message.payload.decode('UTF-8'))
@@ -51,9 +51,6 @@ class mm_unicorn(abstract.mm_abstract):
                     unicorn.set_pixel(x,y,r,g,b)
                     unicorn.show()
 
-    def link(self, creator, settings):
-        super(  mm_unicorn, self).link(creator, settings)
+    def link(self, musq_instance, settings):
+        super(mm_unicorn, self).link(musq_instance, settings)
         logging.debug("unicorn linked!")
-
-    def set_creator(self, creator):
-        self.creator = creator
