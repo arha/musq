@@ -210,7 +210,7 @@ class mm_opione(abstract.mm_abstract):
 
         self.thread_sleep = int(self.settings.get("thread_sleep")) or 10
         logging.debug("thread start with thread_sleep=%s (id=%s)" % (self.thread_sleep, self.my_id))
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()
 
     ## other misc stuff

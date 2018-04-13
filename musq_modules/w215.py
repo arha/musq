@@ -65,5 +65,5 @@ class mm_w215(abstract.mm_abstract):
 
     def run(self):
         logging.debug("thread start")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()

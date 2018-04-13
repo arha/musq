@@ -8,9 +8,10 @@ import socketserver
 
 class mm_http_server(abstract.mm_abstract):
     def __init__(self):
-        self.internal_name="http_server"
-        self.last_send=time.time()
-        self.last_send=0
+        self.internal_name = "http_server"
+        self.last_send = time.time()
+        self.last_send = 0
+        self.httpd = None
 
         logging.getLogger("urllib").setLevel(logging.CRITICAL)
         logging.getLogger("urllib2").setLevel(logging.CRITICAL)
@@ -50,15 +51,15 @@ class mm_http_server(abstract.mm_abstract):
         logging.debug("http_server linked!")
 
     def main(self):
-        PORT = int(self.settings.get("port")) or 8000
+        port = int(self.settings.get("port")) or 8000
         handler = MusqHTTPRequestHandler
-        # eugh, can't use with unless running python 3.6 
+        # eugh, can't use "with" unless running python 3.6
         # https://stackoverflow.com/questions/46396575/cannot-run-python3-httpserver-on-arm-processoru
 
-        httpd = http.server.HTTPServer(("", PORT), handler)
-        httpd.parent = self
-        logging.info("Starting musq HTTP server on 0.0.0.0:%d", PORT)
-        httpd.serve_forever()
+        self.httpd = http.server.HTTPServer(("", port), handler)
+        self.httpd.parent = self
+        logging.info("Starting musq HTTP server on 0.0.0.0:%d", port)
+        self.httpd.serve_forever()
         logging.debug("Thread finished on thread_test")
         return
 
@@ -87,8 +88,12 @@ class mm_http_server(abstract.mm_abstract):
 
     def run(self):
         logging.debug("thread start for http_server")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()
+
+    def signal_exit(self):
+        super(mm_http_server, self).signal_exit()
+        self.httpd.shutdown()
 
 class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     server_version = "musq/0.1"

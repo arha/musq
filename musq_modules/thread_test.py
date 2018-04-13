@@ -18,7 +18,7 @@ class mm_thread_test(abstract.mm_abstract):
         logging.debug("thread_test linked!")
 
     def main(self):
-        while True:
+        while True and not self.kill_thread:
             sleep(0.25)
             ts = time.time()
             if ts - self.last_send > 5:
@@ -30,5 +30,5 @@ class mm_thread_test(abstract.mm_abstract):
 
     def run(self):
         logging.debug("thread start")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()

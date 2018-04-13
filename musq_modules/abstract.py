@@ -10,6 +10,8 @@ class mm_abstract:
     musq_instance = -1
     instance_name = ""
     topic = None
+    thread = None
+    kill_thread = False
 
     def __init__(self):
         self.internal_name="abstract"
@@ -25,6 +27,7 @@ class mm_abstract:
         return my_id
 
     def signal_exit(self):
+        kill_thread = True
         logging.debug("Requesting graceful exit for %s id=%s" % (self.internal_name, self.my_id))
 
     def on_message_received(self, topic, trigger_topic, message, config_line):

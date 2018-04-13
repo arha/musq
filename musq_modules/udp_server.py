@@ -81,8 +81,8 @@ class mm_udp_server(abstract.mm_abstract):
 
     def run(self):
         logging.debug("thread start for udp_server")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()
 
 
 class MusqUDPHandler(socketserver.DatagramRequestHandler):

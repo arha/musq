@@ -50,8 +50,8 @@ class mm_pizero(abstract.mm_abstract):
 
     def run(self):
         logging.debug("thread start")
-        t1 = threading.Thread(target=self.main)
-        t1.start()
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()
 
     def link(self, musq_instance, settings):
         super(mm_pizero, self).link(musq_instance, settings)
