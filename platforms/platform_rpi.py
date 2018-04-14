@@ -159,7 +159,7 @@ class platform_rpi(platform_linux.platform_linux):
 
     def user_error(self, message):
         ts = self.musq.formatted_time()
-        self.musq_instance.self_publish(self, ts + ": " + message, 'error', 2, False)
+        self.musq.self_publish(self, ts + ": " + message, 'error', 2, False)
 
     def run(self):
         logging.debug("RPi thread start")
