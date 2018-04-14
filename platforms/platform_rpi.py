@@ -47,7 +47,7 @@ class platform_rpi(platform_linux.platform_linux):
         self.platform_detect_hat()
         topic_prefix = "/musq/dev/" + self.musq.musq_id + "/"
         self.topic = [ topic_prefix + "#" ]
-        self.autotopic = self.topic[0]
+        self.autotopic = topic_prefix
 
     def signal_exit(self):
         super(platform_rpi, self).setup()
