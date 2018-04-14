@@ -95,5 +95,6 @@ Any 'smart' device that acts as an output can be connected to mqtt via musq if i
 - [ ] DynamoDB, AWS IoT core
 - [ ] Blynk seems popular
 - [X] Write to IR or 433/866 MHz RF stuff with dumb dongle (audio out), works via script+aplay
+- [ ] SNMP
 
 <!-- Pushed this file to trigger github's activity thingie 2 -->

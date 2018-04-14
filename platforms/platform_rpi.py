@@ -1,9 +1,15 @@
 __author__ = 'arha'
 from platforms import platform_abstract, platform_linux
 import logging
-import socket, fcntl, struct    # needed to get the IPs of this device
-import sys, hashlib
+import socket 
+import fcntl
+import struct    # needed to get the IPs of this device
+import sys
+import hashlib
+import time
+import threading
 from enum import Enum
+import RPi.GPIO as GPIO
 
 # TODO: leds pi zero w:
 # root@rpi-zero-arha:/sys/class/leds/led0# echo "1" > /sys/class/leds/led0/brightness
@@ -31,14 +37,19 @@ class platform_rpi(platform_linux.platform_linux):
         super(  platform_rpi, self).__init__()
         self.name = "rpi"
         logging.debug("Platform init: rpi")
+        self.kill_thread = False
+        self.last_send = 0
 
     def setup(self):
         super(  platform_rpi, self).setup()
         self.platform_detect_extended()
         self.platform_detect_hat()
+        topic_prefix = "/musq/dev/" + self.musq.musq_id + "/"
+        self.topic = [ topic_prefix + "#" ]
 
     def signal_exit(self):
-        super(  platform_rpi, self).setup()
+        super(platform_rpi, self).setup()
+        self.kill_thread = True
 
     def platform_detect_extended(self):
         str1 = self.musq.get_first_line("/sys/firmware/devicetree/base/model").strip()
@@ -48,7 +59,7 @@ class platform_rpi(platform_linux.platform_linux):
         # maybe using Revision numbers is better? like a02082... https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
         if ("3 Model B Rev" in self.model_string):
             self.model = Rpi_board.PI3_MODEL_B
-        elif ("3 Model B Plus Rev" in self.model_string):   # eeeh... idk
+        elif ("3 Model B Plus Rev" in self.model_string):
             self.model = Rpi_board.PI3_MODEL_B_PLUS
         elif ("Raspberry Pi Zero W" in self.model_string):
             self.model = Rpi_board.PI_ZERO_W
@@ -82,6 +93,59 @@ class platform_rpi(platform_linux.platform_linux):
     def hat_setup(self):
         logging.debug("Setting up hat %s" % self.hat_name)
 
+    def on_message_received(self, topic, trigger_topic, message, config_line):
+        self.process_message(trigger_topic, message.payload.decode("UTF-8"))
+        return
+
+    def my_callback(self, channel):
+        print(channel + "up")
+
+    def main(self):
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(11, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        #GPIO.add_event_detect(11, GPIO.RISING)
+        GPIO.add_event_detect(11, GPIO.RISING, callback=self.my_callback, bouncetime=50)
+        last_heartbeat = time.time()
+        while True and not self.kill_thread:
+            time.sleep(0.25)
+            ts = time.time()
+            if ts - self.last_send > 0.25:
+                if ts - last_heartbeat >= 60:
+                    self.musq.heartbeat()
+                    last_heartbeat = ts
+                self.last_send = ts
+                #print (GPIO.input(11))
+                #if GPIO.event_detected(11):
+                #    print("11 up!")
+        logging.debug("Thread finished on RPi platform")
+
+    def split_topic(self, trigger_topic):
+        for topic in self.topic:
+            topic = topic.replace('/#', '') #TODO there must be a better way to manage self-generated topics and how to match them
+            #print("split %s, trigger=%s" % (topic, trigger_topic))
+            #print( trigger_topic.startswith(topic) )
+            if topic is not None and trigger_topic.startswith(topic):
+                subtopic = trigger_topic[len(topic):]
+                parts = subtopic.split("/")
+                if parts[0].strip() == "":
+                    del (parts[0])
+                return parts
+
+    def process_message(self, topic, message):
+        # print ("topic [%s], message [%s]" % (topic, message))
+        topic_parts = self.split_topic(topic)
+        # print ("split %s" % (topic_parts))
+        if topic_parts[0].lower() == "gpio":
+            self.do_gpio(topic_parts, message)
+
+    def do_gpio(self, topic_parts, message):
+        print("do gpio %s, %s" % (topic_parts, message))
+
+    def run(self):
+        logging.debug("RPi thread start")
+        self.thread = threading.Thread(target=self.main)
+        self.thread.start()
+
     def generate_musq_id(self):
         # used as a unique identifier in /musq/[id] and /musq/heartbeat/[id] so a device can be reliably identified in the mqtt topic tree
         # combines the following strings hostname : user supplied string + platform name  + cpu_serial_number + list_of_eth_macs_concatenated
@@ -91,7 +155,6 @@ class platform_rpi(platform_linux.platform_linux):
         # ids will probably clash, given enough boards...
 
         env = self.musq.get_env_data()
-        # TODO serial number on x86
         serial = env.get("serial") or ""
         macs = []
         nics = self.get_all_if_data()
@@ -116,3 +179,6 @@ class platform_rpi(platform_linux.platform_linux):
         result=result[0:4]
         logging.debug("Calculated system musq_id=%s from hash string \"%s\"" % (result, input_str))
         return result
+
+    def load_pin_config(self):
+        self.iopins=[3,5,7,8, 10,11,12,13, 15,16,18,19, 21,22,23,24, 26]

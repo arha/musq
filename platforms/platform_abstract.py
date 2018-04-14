@@ -11,7 +11,7 @@ class platform_abstract:
         pass
 
     def signal_exit(self):
-        pass
+        self.kill_thread = True
 
     def get_env_data(self):
         return {"platform": "abstract"}

@@ -50,6 +50,11 @@ class Musq():
 
         self.platform = self.load_platform()
         self.musq_id = self.platform.generate_musq_id().strip()
+        self.platform.setup()
+        wants_thread = getattr(self.platform, "run", None)
+        if wants_thread:
+            logging.debug("Starting platform thread")
+            self.platform.run()
 
         logging.info("-----------------------------")
         logging.info('musq starting; musq_id = %s' % (self.musq_id))
@@ -88,6 +93,12 @@ class Musq():
         if self.killer.kill_now:
             return
         logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
+        
+        if self.platform.topic is not None:
+            for platform_topic in self.platform.topic:
+                if mqtt.topic_matches_sub(platform_topic, msg.topic):
+                    logging.debug("Received message for platform; topic received: " + msg.topic)
+                    self.platform.on_message_received(platform_topic, msg.topic, msg, "x config line")
 
         for name, module in self.modules.items():
             if module.topic is None:
@@ -95,7 +106,7 @@ class Musq():
 
             for module_topic in module.topic:
                 if mqtt.topic_matches_sub(module_topic, msg.topic):
-                    logging.debug("Calling module: " + module.internal_name + "; topic received: " + msg.topic)
+                    logging.debug("Received message for module: " + module.internal_name + "; topic received: " + msg.topic)
                     module.on_message_received(module_topic, msg.topic, msg, "x config line")
 
     def heartbeat(self):
@@ -164,6 +175,7 @@ class Musq():
             return instance
 
     def prepare_kill(self):
+        self.platform.signal_exit()
         for key, module in self.modules.items():
             if module is not None:
                 module.signal_exit()
@@ -209,7 +221,6 @@ class Musq():
                 logging.info("Platform configured: Windows, generic")
 
         platform.musq = self
-        platform.setup()
         return platform
 
     def load_settings_file(self, path):
