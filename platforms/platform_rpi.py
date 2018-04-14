@@ -157,47 +157,46 @@ class platform_rpi(platform_linux.platform_linux):
             self.user_error("")
 
         elif command == "write":
-            if len(topic_parts) >= 2:
-                new_target = topic_parts[2]
-                if not self.set_target_io(new_target):
-                    return
-            if message.strip != "":
-                self._io_write(self.target, message)
+            if self.set_target_io_from_topic(topic_parts) is not None:
+                if message.strip != "":
+                    self._io_write(self.target, message)
 
         elif command == "read":
-            self.set_target_io_from_topic(topic_parts)
-            value = self._io_read(self.target)
-            self.musq.self_publish(self, value, "status/" + str(self.target))
+            if self.set_target_io_from_topic(topic_parts) is not None:
+                value = self._io_read(self.target)
+                self.musq.self_publish(self, value, "status/" + str(self.target))
 
         elif command == "rising_event":
-            self.set_target_io_from_topic(topic_parts)
-            if message == "1" or message == "":
-                try:
-                    GPIO.add_event_detect(self.target, GPIO.RISING, callback=self.io_rising_callback, bouncetime=50)
-                    self.user_status("Pin %s will publish rising events to /status/%s" % (self.target, self.target))
-                except RuntimeError:
-                    self.user_status("Runtime error setting rising event, perhaps the falling one is already set?")
-            elif message == "0":
-                GPIO.remove_event_detect(self.target)
-                self.user_status("Pin %s will not publish rising events" % self.target)
+            if self.set_target_io_from_topic(topic_parts) is not None:
+                if message == "1" or message == "":
+                    try:
+                        GPIO.add_event_detect(self.target, GPIO.RISING, callback=self.io_rising_callback, bouncetime=50)
+                        self.user_status("Pin %s will publish rising events to /status/%s" % (self.target, self.target))
+                    except RuntimeError:
+                        self.user_status("Runtime error setting rising event, perhaps the falling one is already set?")
+                elif message == "0":
+                    GPIO.remove_event_detect(self.target)
+                    self.user_status("Pin %s will not publish rising events" % self.target)
 
         elif command == "falling_event":
-            self.set_target_io_from_topic(topic_parts)
-            if message == "1" or message == "":
-                try:
-                    GPIO.add_event_detect(self.target, GPIO.FALLING, callback=self.io_falling_callback, bouncetime=50)
-                    self.user_status("Pin %s will publish falling events to /status/%s" % (self.target, self.target))
-                except RuntimeError:
-                    self.user_status("Runtime error setting falling event, perhaps the rising one is already set?")
-            elif message == "0":
-                GPIO.remove_event_detect(self.target)
-                self.user_status("Pin %s will not publish falling events" % self.target)
+            if self.set_target_io_from_topic(topic_parts) is not None:
+                if message == "1" or message == "":
+                    try:
+                        GPIO.add_event_detect(self.target, GPIO.FALLING, callback=self.io_falling_callback, bouncetime=50)
+                        self.user_status("Pin %s will publish falling events to /status/%s" % (self.target, self.target))
+                    except RuntimeError:
+                        self.user_status("Runtime error setting falling event, perhaps the rising one is already set?")
+                elif message == "0":
+                    GPIO.remove_event_detect(self.target)
+                    self.user_status("Pin %s will not publish falling events" % self.target)
 
     def set_target_io_from_topic(self, topic_parts):
         if len(topic_parts) >= 2:
             new_target = topic_parts[2]
         if self.set_target_io(new_target) is None:
-            return
+            return None
+        else:
+            return self.target
 
     def set_target_io(self, message):
         try:
