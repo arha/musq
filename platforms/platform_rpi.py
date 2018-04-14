@@ -149,7 +149,7 @@ class platform_rpi(platform_linux.platform_linux):
             target = int(message)
             if target not in self.iopins:
                 self.user_error("Pin %s is not an I/O pin" % message)
-            else
+            else:
                 self.target = int(message)
 
     def user_error(self, message):
