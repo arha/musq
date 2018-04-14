@@ -158,6 +158,7 @@ class platform_rpi(platform_linux.platform_linux):
                 self.target = int(message)
 
     def user_error(self, message):
+        # test push
         ts = self.musq.formatted_time()
         self.musq.self_publish(self, ts + ": " + message, 'error', 2, False)
 
