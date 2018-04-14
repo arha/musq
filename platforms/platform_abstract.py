@@ -4,7 +4,7 @@ import logging
 class platform_abstract:
     musq = None
     def __init__(self):
-        self.name = "abstract"
+        self.internal_name = "abstract"
         logging.debug("Platform init: abstract")
 
     def setup(self):

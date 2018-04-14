@@ -6,8 +6,8 @@ import sys, hashlib
 
 class platform_opione(platform_linux.platform_linux):
     def __init__(self):
-        super(  platform_opione, self).__init__()
-        self.name = "opione"
+        super(platform_opione, self).__init__()
+        self.internal_name = "opione"
         logging.debug("Platform init: opione")
 
     def setup(self):

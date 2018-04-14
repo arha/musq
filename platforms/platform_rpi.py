@@ -34,7 +34,7 @@ class Rpi_hats(Enum):
 class platform_rpi(platform_linux.platform_linux):
     def __init__(self):
         super(  platform_rpi, self).__init__()
-        self.name = "rpi"
+        self.internal_name = "rpi"
         logging.debug("Platform init: rpi")
         self.kill_thread = False
         self.last_send = 0

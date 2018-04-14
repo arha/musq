@@ -8,7 +8,7 @@ from enum import Enum
 class platform_onion2(platform_linux.platform_linux):
     def __init__(self):
         super(  platform_onion2, self).__init__()
-        self.name = "omega_onion2"
+        self.internal_name = "omega_onion2"
         logging.debug("Platform init: omega onion2.")
 
     def setup(self):

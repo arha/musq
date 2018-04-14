@@ -7,7 +7,7 @@ import sys, hashlib, re, subprocess
 class platform_linux(platform_abstract.platform_abstract):
     def __init__(self):
         super(platform_linux, self).__init__()
-        self.name = "x86_linux"
+        self.internal_name = "x86_linux"
         logging.debug("Platform init: x86_linux")
 
     def setup(self):
@@ -115,7 +115,7 @@ class platform_linux(platform_abstract.platform_abstract):
         if self.musq.settings.get('musq_id_extra_salt') is not None:
             salt = str(self.musq.settings.get('musq_id_extra_salt'))
             input_str = input_str + salt + ":"
-        input_str += self.name + ":" + serial + macs
+        input_str += self.internal_name + ":" + serial + macs
         result = input_str
         for i in range(1, 9):
             result = hashlib.md5(result.encode("UTF-8")).hexdigest().upper()

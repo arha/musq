@@ -5,7 +5,7 @@ import logging
 class platform_x86_win(platform_abstract.platform_abstract):
     def __init__(self):
         super(  platform_x86_win, self).__init__()
-        self.name = "x86_win"
+        self.internal_name = "x86_win"
         logging.debug("Platform init: x86_win")
 
     def setup(self):
