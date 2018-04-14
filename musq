@@ -92,12 +92,12 @@ class Musq():
     def on_message(self, client, userdatanp, msg):
         if self.killer.kill_now:
             return
-        logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
+        #logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
         
         if self.platform.topic is not None:
             for platform_topic in self.platform.topic:
                 if mqtt.topic_matches_sub(platform_topic, msg.topic):
-                    logging.debug("Received message for platform; topic received: " + msg.topic)
+                    #logging.debug("Received message for platform; topic received: " + msg.topic)
                     self.platform.on_message_received(platform_topic, msg.topic, msg, "x config line")
 
         for name, module in self.modules.items():
@@ -106,7 +106,7 @@ class Musq():
 
             for module_topic in module.topic:
                 if mqtt.topic_matches_sub(module_topic, msg.topic):
-                    logging.debug("Received message for module: " + module.internal_name + "; topic received: " + msg.topic)
+                    #logging.debug("Received message for module: " + module.internal_name + "; topic received: " + msg.topic)
                     module.on_message_received(module_topic, msg.topic, msg, "x config line")
 
     def heartbeat(self):
@@ -260,7 +260,7 @@ class Musq():
         if topic[0] != "/":
             topic = "/" + topic
         topic = sender.autotopic + topic
-        
+
         retain_log = ("R" if retain else "N")
         retain_log = ("X" if (retain and message == '') else retain_log)
         logging.debug("pub [self] from %s (id=%s) %s%d to topic [%s], message=\"%s\"" % (sender.internal_name, sender.my_id, retain_log, qos, topic, message) )

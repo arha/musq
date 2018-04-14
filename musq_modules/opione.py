@@ -57,14 +57,14 @@ class mm_opione(abstract.mm_abstract):
         return True
 
     def split_topic(self, trigger_topic, topic):
-        if (self.autotopic != None and trigger_topic.startswith(self.autotopic)):
+        if self.autotopic != None and trigger_topic.startswith(self.autotopic):
             # print ("autotopic (%s) found matching message on topic (%s)" % (self.autotopic, trigger_topic))        
             subtopic = trigger_topic[ len(self.autotopic) : ]
             parts = subtopic.split("/")
             if (parts[0].strip() == ""):
                 del (parts[0])
             return { "matching_topic": "autotopic", "parts": parts }
-        elif (topic != None and trigger_topic.startswith(topic)):
+        elif topic != None and trigger_topic.startswith(topic):
             print ("config topic")
             return { "matching_topic": "config", "parts": None }
 
@@ -73,38 +73,38 @@ class mm_opione(abstract.mm_abstract):
         logging.debug("trigger_topic=" + trigger_topic)
         # logging.debug("message=" + message.payload.decode('UTF-8'))
         # logging.debug("config_line=" + config_line)
-        if (self.is_topic_relevant(trigger_topic)):
+        if self.is_topic_relevant(trigger_topic):
             t = self.split_topic(trigger_topic, topic)
             topic_mode = t['matching_topic']
             p = t['parts']
             m = message.payload.decode("UTF-8")
 
-            if (p[0].lower() == "gpio"):
-                if (p[1].lower() == "target"):
-                    if (self.pin_id(m) != None):
+            if p[0].lower() == "gpio":
+                if p[1].lower() == "target":
+                    if self.pin_id(m) != None:
                         pin = self.clean_pin_name(m)
-                        logging.debug("Setting target pin to %s" % (pin))
+                        logging.debug("Setting target pin to %s" % pin)
                         self.pintarget = pin
                     else:
-                        logging.debug("Invalid pin target: %s" % (m))
+                        logging.debug("Invalid pin target: %s" % m)
 
-                if (p[1].lower() == 'write'):
+                if p[1].lower() == 'write':
                     if (self.pintarget == None):
                         logging.debug("Cannot write, invalid pin targeted: %s. Write to %s a correct pin" % (self.pintarget, self.autotopic + "/gpio/target"))
                     else:
                         self.pin_write(self.pintarget, m)
 
-                if (p[1].upper() in self.pinmap):
+                if p[1].upper() in self.pinmap:
                     # user is doing a direct write, without specifying a target
                     logging.debug("Fast GPIO %s: %s" % (p[1].upper(), m))
                     self.pin_write(p[1].upper(), m)
                 
     def pin_id(self, pin_name):
         pin = pin_name.upper().strip()
-        if (pin[0:1] != "P"):
+        if pin[0:1] != "P":
             # try to find the pin anyway, if the user types just A0 instead of pa0
             pin = "P" + pin
-        if (pin in self.pinmap):
+        if pin in self.pinmap:
             return self.pinmap[pin]
         else:
             return None
@@ -112,7 +112,7 @@ class mm_opione(abstract.mm_abstract):
     def clean_pin_name(self, pin_name):
         pin = self.pin_id(pin_name)
         for key, val in self.pinmap.items():
-            if (val == pin):
+            if val == pin:
                 return key
         return None
 
