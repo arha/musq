@@ -193,7 +193,7 @@ class platform_rpi(platform_linux.platform_linux):
         if (self.musq.settings.get('musq_id_extra_salt') != None):
             salt = str(self.musq.settings.get('musq_id_extra_salt'))
             input_str = input_str + salt + ":"
-        input_str += self.name + ":" + serial + macs
+        input_str += self.internal_name + ":" + serial + macs
         result = input_str
         for i in range(1,9):
             # print (result)
