@@ -31,7 +31,6 @@ class Rpi_hats(Enum):
     NONE = 0
     PIMORONI_UNICORN_64=100
 
-
 class platform_rpi(platform_linux.platform_linux):
     def __init__(self):
         super(  platform_rpi, self).__init__()
@@ -39,6 +38,8 @@ class platform_rpi(platform_linux.platform_linux):
         logging.debug("Platform init: rpi")
         self.kill_thread = False
         self.last_send = 0
+        self.load_pin_config()
+        self.target = 0
 
     def setup(self):
         super(  platform_rpi, self).setup()
@@ -140,6 +141,20 @@ class platform_rpi(platform_linux.platform_linux):
 
     def do_gpio(self, topic_parts, message):
         print("do gpio %s, %s" % (topic_parts, message))
+
+        if len(topic_parts) == 1:
+            return
+        command = topic_parts[1].lower()
+        if command.lower().strip() == "target":
+            target = int(message)
+            if target not in self.iopins:
+                self.user_error("Pin %s is not an I/O pin" % message)
+            else
+                self.target = int(message)
+
+    def user_error(self, message):
+        ts = self.musq.formatted_time()
+        self.musq_instance.self_publish(self, ts + ": " + message, 'error', 2, False)
 
     def run(self):
         logging.debug("RPi thread start")
