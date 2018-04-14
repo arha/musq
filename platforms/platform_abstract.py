@@ -5,6 +5,7 @@ class platform_abstract:
     musq = None
     def __init__(self):
         self.internal_name = "abstract"
+        self.my_id = "platform"
         logging.debug("Platform init: abstract")
 
     def setup(self):
