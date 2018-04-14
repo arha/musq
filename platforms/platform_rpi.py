@@ -99,7 +99,7 @@ class platform_rpi(platform_linux.platform_linux):
         return
 
     def my_callback(self, channel):
-        print(channel + "up")
+        print(str(channel) + "up")
 
     def main(self):
         GPIO.setmode(GPIO.BOARD)
@@ -146,7 +146,12 @@ class platform_rpi(platform_linux.platform_linux):
             return
         command = topic_parts[1].lower()
         if command.lower().strip() == "target":
-            target = int(message)
+            try:
+                target = int(message)
+            except ValueError:
+                self.user_error("Invalid I/O pin: %s" % message)
+                return
+
             if target not in self.iopins:
                 self.user_error("Pin %s is not an I/O pin" % message)
             else:
