@@ -122,7 +122,8 @@ class Musq():
         for instance_name, settings in self.settings.get("modules").items():
             if settings and settings.get("module"):
                 module_name = settings.get("module")
-                if isfile(self.mod_path + module_name + ".py"):
+                library = self.get_module_library(module_name)
+                if isfile(self.mod_path + library + ".py"):
                     # don't load a disabled module
                     if ('off' in settings) or ('disabled' in settings):
                         if settings.get("off") == True or settings.get("off") == 1 \
@@ -163,16 +164,24 @@ class Musq():
         return modules
 
     def load_single_module(self, mod_name):
+        library = self.get_module_library(mod_name)
         try:
-            mod = importlib.import_module("musq_modules." + mod_name)
+            mod = importlib.import_module("musq_modules." + library)
         except:
-            logging.debug("Loading module %s, failed: %s", mod_name, sys.exc_info())
+            logging.debug("Loading module %s.%s, failed: %s", library, mod_name, sys.exc_info())
             return None
         else:
             constructor = getattr(mod, 'mm_' + mod_name)
             instance = constructor()
             logging.debug("Loading module %s, id=%s, instance = %s", mod_name, instance.get_id(), instance)
             return instance
+
+    def get_module_library(self, mod_name):
+        library = mod_name
+        if mod_name == "copy":
+            library = "common"
+        return library
+
 
     def prepare_kill(self):
         self.platform.signal_exit()

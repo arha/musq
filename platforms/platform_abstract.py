@@ -6,6 +6,7 @@ class platform_abstract:
     def __init__(self):
         self.internal_name = "abstract"
         self.my_id = "platform"
+        self.topic = None
         logging.debug("Platform init: abstract")
 
     def setup(self):

@@ -51,7 +51,7 @@ class platform_linux(platform_abstract.platform_abstract):
             record = self.get_data_for_if(name)
             if record is not None:
                 nic.append(record)
-        return (nic)
+        return nic
 
     def get_all_ips(self):
         # TODO: /sys/class/net/<iface>/address
@@ -76,17 +76,22 @@ class platform_linux(platform_abstract.platform_abstract):
                 struct.pack('256s', ifname[:15].encode("UTF-8"))
             )
             ip = socket.inet_ntoa(info[20:24])
+        except OSError:
+            logging.warning("Cannot get ip of interface %s, error %s: %s" % (ifname, sys.exc_info()[0], sys.exc_info()[1]))
+            ip = "unknown"
 
+        try:
             info = fcntl.ioctl(
                 s.fileno(),
                 0x8927,
                 struct.pack('256s', ifname[:15].encode("UTF-8"))
             )
             mac = ':'.join(['%02x' % (char) for char in info[18:24]])
-            result = {"name": ifname, "ip": ip, "mac": mac}
         except OSError:
-            logging.warning("Cannot get ip/mac of interface %s, error %s: %s" % (ifname, sys.exc_info()[0], sys.exc_info()[1]))
-            result = None
+            logging.warning("Cannot get mac of interface %s, error %s: %s" % (ifname, sys.exc_info()[0], sys.exc_info()[1]))
+            mac = ""
+
+        result = {"name": ifname, "ip": ip, "mac": mac}
         return result
 
     def generate_musq_id(self):
@@ -106,9 +111,8 @@ class platform_linux(platform_abstract.platform_abstract):
         # TODO: maybe exclude bridges or check how to grab mac of components
         for nic in nics:
             if 'eth' in nic['name'] or 'br' in nic['name']:
-                macs.append (nic['mac'])
+                macs.append(nic['mac'])
         macs = (''.join(macs)).replace(":", "")
-
         input_str = ""
         if self.musq.settings.get('musq_id_salt_hostname') is not None:
             input_str = env['hostname'] + ":"

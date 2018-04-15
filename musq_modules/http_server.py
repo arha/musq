@@ -4,7 +4,7 @@ import logging
 import threading
 from time import sleep
 import http.server
-import socketserver
+import urllib.parse
 
 class mm_http_server(abstract.mm_abstract):
     def __init__(self):
@@ -29,7 +29,7 @@ class mm_http_server(abstract.mm_abstract):
                 logging.warning("No topic defined for http server, nothing will be published to MQTT")
                 return
         if self.settings.get('url') is not None and self.settings.get('topic') is not None:
-            self.routes[self.settings.get('url').strip()] = { "topic": self.settings.get("topic").strip() }
+            self.routes[self.settings.get('url').strip()] = {"topic": self.settings.get("topic").strip()}
 
         if self.settings.get('routes') is not None:
             for route_record in (self.settings.get('routes')):
@@ -75,14 +75,25 @@ class mm_http_server(abstract.mm_abstract):
 
         if path in self.routes:
             route = self.routes.get(path)
-            result = "139"
+            message = "1"
+
+            if method == "POST":
+                var_len = int(handler.headers['Content-Length'])
+                post_vars = handler.rfile.read(var_len)
+                post_data = urllib.parse.parse_qs(post_vars)
+                if post_data.get(b"value") is not None:
+                    message = (post_data.get(b"value")[0]).decode("UTF-8")
+                else:
+                    logging.warning("HTTP server %s: POST variable 'value' is expected." % self.instance_name)
+
             topic = route.get("topic")
             if topic is not None:
                 qos = 2
                 retain = False
-                self.musq_instance.raw_publish(self, result, topic, qos, retain )
+                self.musq_instance.raw_publish(self, message, topic, qos, retain )
                 # todo return code, improve checking based on methods
                 response = "<pre>ok\r\n" + method + "\r\n\r\n" + str(headers) + "\r\n"
+
                 handler.wfile.write(response.encode("UTF-8"))
                 return 200
             else:

@@ -105,11 +105,9 @@ class platform_rpi(platform_linux.platform_linux):
         return
 
     def io_rising_callback(self, channel):
-        # ("RISE: %s" % str(channel))
         self.musq.self_publish(self, "1", "status/" + str(channel))
 
     def io_falling_callback(self, channel):
-        # print("FALL: %s" % str(channel))
         self.musq.self_publish(self, "0", "status/" + str(channel))
 
     def main(self):
@@ -123,14 +121,12 @@ class platform_rpi(platform_linux.platform_linux):
                     self.musq.heartbeat()
                     last_heartbeat = ts
                 self.last_send = ts
-                #print (GPIO.input(11))
-                #if GPIO.event_detected(11):
-                #    print("11 up!")
         logging.debug("Thread finished on RPi platform")
 
     def split_topic(self, trigger_topic):
         for topic in self.topic:
-            topic = topic.replace('/#', '') #TODO there must be a better way to manage self-generated topics and how to match them
+            topic = topic.replace('/#', '')
+            #TODO there must be a better way to manage self-generated topics and how to match them
             #print("split %s, trigger=%s" % (topic, trigger_topic))
             #print( trigger_topic.startswith(topic) )
             if topic is not None and trigger_topic.startswith(topic):
@@ -153,7 +149,7 @@ class platform_rpi(platform_linux.platform_linux):
         if command == "target":
             if not self.set_target_io(message):
                 return
-            self.user_status("Pin %s is now the target I/O pin" % self.target)
+            self.user_info("Pin %s is now the target I/O pin" % self.target)
             self.user_error("")
 
         elif command == "write":
@@ -171,24 +167,25 @@ class platform_rpi(platform_linux.platform_linux):
                 if message == "1" or message == "":
                     try:
                         GPIO.add_event_detect(self.target, GPIO.RISING, callback=self.io_rising_callback, bouncetime=50)
-                        self.user_status("Pin %s will publish rising events to /status/%s" % (self.target, self.target))
+                        self.user_info("Pin %s will publish rising events to /status/%s" % (self.target, self.target))
                     except RuntimeError:
-                        self.user_status("Runtime error setting rising event, perhaps the falling one is already set?")
+                        self.user_info("Runtime error setting rising event, perhaps the falling one is already set?")
                 elif message == "0":
                     GPIO.remove_event_detect(self.target)
-                    self.user_status("Pin %s will not publish rising events" % self.target)
+                    self.user_info("Pin %s will not publish rising events" % self.target)
 
         elif command == "falling_event":
             if self.set_target_io_from_topic(topic_parts) is not None:
                 if message == "1" or message == "":
                     try:
                         GPIO.add_event_detect(self.target, GPIO.FALLING, callback=self.io_falling_callback, bouncetime=50)
-                        self.user_status("Pin %s will publish falling events to /status/%s" % (self.target, self.target))
+                        self.user_info("Pin %s will publish falling events to /status/%s" % (self.target, self.target))
                     except RuntimeError:
-                        self.user_status("Runtime error setting falling event, perhaps the rising one is already set?")
+                        # TODO: GPIO.BOTH and some logic to allow the user to mix them however he wants
+                        self.user_info("Runtime error setting falling event, perhaps the rising one is already set?")
                 elif message == "0":
                     GPIO.remove_event_detect(self.target)
-                    self.user_status("Pin %s will not publish falling events" % self.target)
+                    self.user_info("Pin %s will not publish falling events" % self.target)
 
     def set_target_io_from_topic(self, topic_parts):
         if len(topic_parts) >= 2:
@@ -217,7 +214,6 @@ class platform_rpi(platform_linux.platform_linux):
             logging.warning("Could not read, invalid pin name %s" % pin)
             self.user_error("Could not read, invalid pin name %s" % pin)
             return
-
         try:
             value = GPIO.input(pin)
             if value or value is GPIO.HIGH:
@@ -250,32 +246,32 @@ class platform_rpi(platform_linux.platform_linux):
         if m == '1' or m == 'on':
             GPIO.setup(self.target, GPIO.OUT, initial=GPIO.HIGH)
             log_line = "Set pin %s to 1 (output, strong high)" % pin
-            self.user_status(log_line)
+            self.user_info(log_line)
             logging.debug(log_line)
 
         if m == '0' or m == "off" or m == "of":
             GPIO.setup(self.target, GPIO.OUT, initial=GPIO.LOW)
             log_line = "Set pin %s to 1 (output, strong low)" % pin
-            self.user_status(log_line)
+            self.user_info(log_line)
             logging.debug(log_line)
 
         if m == 'z' or m == 'in':
             # no pull-up, no pulldown
             GPIO.setup(self.target, GPIO.IN, pull_up_down=GPIO.PUD_OFF)
             log_line = "Set pin %s to high z (input, no pullup, no pulldown)" % pin
-            self.user_status(log_line)
+            self.user_info(log_line)
             logging.debug(log_line)
 
         if m == 'l' or m == 'w0' or m == 'z0':
             GPIO.setup(self.target, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
             log_line = "Set pin %s to weak low (input, pulldown)" % pin
-            self.user_status(log_line)
+            self.user_info(log_line)
             logging.debug(log_line)
 
         if m == 'h' or m == 'w1' or m == 'z1':
             GPIO.setup(self.target, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             log_line = "Set pin %s to weak low (input, pullup)" % pin
-            self.user_status(log_line)
+            self.user_info(log_line)
             logging.debug(log_line)
 
     def user_error(self, message):
@@ -283,11 +279,10 @@ class platform_rpi(platform_linux.platform_linux):
             message = self.musq.formatted_time() + " " + message
         self.musq.self_publish(self, message, 'error', 2, False)
 
-    def user_status(self, message):
+    def user_info(self, message):
         if message != "":
             message = self.musq.formatted_time() + " " + message
-        self.musq.self_publish(self, message, 'status', 2, False)
-
+        self.musq.self_publish(self, message, 'info', 2, False)
 
     def run(self):
         logging.debug("RPi thread start")
@@ -312,7 +307,7 @@ class platform_rpi(platform_linux.platform_linux):
             if 'eth' in nic['name'] or 'br' in nic['name']:
                 macs.append (nic['mac'])
         macs = (''.join(macs)).replace(":", "")
-
+        print ("*** macs [%s]" % macs)
         input_str = ""
         if self.musq.settings.get('musq_id_salt_hostname') is not None:
             input_str = env['hostname'] + ":"
@@ -328,4 +323,4 @@ class platform_rpi(platform_linux.platform_linux):
         return result
 
     def load_pin_config(self):
-        self.iopins = [3, 5, 7, 8,  10, 11, 12, 13, 15, 16, 18, 19,  21, 22, 23, 24, 26]
+        self.iopins = [3, 5, 7, 8,  10, 11, 12, 13,  15, 16, 18, 19,  21, 22, 23, 24,  26, 29, 31, 32,  33, 35, 36, 37,  38, 40]

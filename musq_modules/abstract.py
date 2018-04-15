@@ -23,7 +23,7 @@ class mm_abstract:
         self.settings = settings
 
     def get_id(self):
-        my_id=( "%08X" % (id(self)))
+        my_id=("%08X" % (id(self)))
         return my_id
 
     def signal_exit(self):
