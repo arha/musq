@@ -192,20 +192,15 @@ class TwilioSMSGateway(SMSGateway):
         h.add_credentials(self.api_key, self.api_secret)
         method = "POST"
         url = "https://api.twilio.com/2010-04-01/Accounts/" + self.api_key + "/Messages"
-
         content_type, data_out = self.encode_multipart_formdata_fields(data, None)
         headers_in = {'Content-type': content_type}
-
         (headers_out, content) = h.request(url, method=method, body=data_out, headers=headers_in)
-
         logging.info(headers_out)
         logging.info(content)
 
         from xml.dom import minidom
         xmldoc = minidom.parseString(content.decode("UTF-8"))
-
         # print(xmldoc)
-
 
     def encode_multipart_formdata_fields(self, fields):
         """
