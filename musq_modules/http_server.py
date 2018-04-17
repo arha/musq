@@ -2,9 +2,12 @@ from musq_modules import abstract
 import time
 import logging
 import threading
-from time import sleep
 import http.server
-import urllib.parse
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
+    from urllib.parse import parse_qs
 
 class mm_http_server(abstract.mm_abstract):
     def __init__(self):
@@ -46,7 +49,6 @@ class mm_http_server(abstract.mm_abstract):
         logging.warning("*** if you want an mqtt message to trigger a HTTP request, use the http_client module")
         logging.warning("***")
 
-
     def link(self, musq_instance, settings):
         super(mm_http_server, self).link(musq_instance, settings)
         self.configure_routes()
@@ -60,6 +62,14 @@ class mm_http_server(abstract.mm_abstract):
         # https://stackoverflow.com/questions/46396575/cannot-run-python3-httpserver-on-arm-processoru
         self.httpd = http.server.HTTPServer(("", port), handler)
         self.httpd.parent = self
+        if self.settings.get("certificate") is not None:
+            cert = self.settings.get("certificate")
+            import ssl
+            certkey = None
+            if self.settings.get("keyfile") is not None:
+                certkey = self.settings.get("keyfile")
+            self.httpd.socket = ssl.wrap_socket (self.httpd.socket, certfile=cert, keyfile=certkey, server_side=True)
+            logging.info("HTTPS configured succesfully")
         logging.info("Starting musq HTTP server on 0.0.0.0:%d", port)
         self.httpd.serve_forever()
         logging.debug("Thread finished on HTTP server")
@@ -72,19 +82,25 @@ class mm_http_server(abstract.mm_abstract):
         ip = handler.client_address
 
         logging.info("HTTP request: %s:%s - %s %s " % (ip[0], ip[1], method, path))
-
-        if path in self.routes:
-            route = self.routes.get(path)
+        query_str = urlparse(path).query
+        query_path = urlparse(path).path
+        if query_path in self.routes:
+            route = self.routes.get(query_path)
             message = "1"
 
-            if method == "POST":
+            if method == "POST" or method == "PUT" or method == "DELETE":
                 var_len = int(handler.headers['Content-Length'])
                 post_vars = handler.rfile.read(var_len)
-                post_data = urllib.parse.parse_qs(post_vars)
+                post_data = urlparse.parse.parse_qs(post_vars)
                 if post_data.get(b"value") is not None:
                     message = (post_data.get(b"value")[0]).decode("UTF-8")
                 else:
                     logging.warning("HTTP server %s: POST variable 'value' is expected." % self.instance_name)
+            elif method == "GET":
+                get_vars = parse_qs(query_str)
+                print(get_vars)
+                if get_vars.get("value") is not None:
+                    message = (get_vars.get("value")[0])
 
             topic = route.get("topic")
             if topic is not None:

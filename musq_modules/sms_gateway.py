@@ -209,7 +209,8 @@ class TwilioSMSGateway(SMSGateway):
         Return (content_type, body) ready for httplib.HTTP instance
         """
 
-        import os,binascii
+        import os
+        import binascii
         boundry = (binascii.b2a_hex(os.urandom(15)).decode("UTF-8"))
         crlf = '\r\n'
         L = []

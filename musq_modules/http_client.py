@@ -37,7 +37,8 @@ class mm_http_client(abstract.mm_abstract):
                 publish_retain = self.settings.get("publish_retain") or False
                 self.musq_instance.raw_publish(self, result, publish_result, publish_qos, publish_retain)
             elif publish_result == trigger_topic:
-                logging.error("will *NOT* publish result of request received on [%s] to [%s] - will cause a loopback" % (trigger_topic, publish_result))
+                logging.error("will *NOT* publish result of request received on [%s] to [%s] - will cause a loopback" %
+                              (trigger_topic, publish_result))
 
     def link(self, musq_instance, settings):
         super(mm_http_client, self).link(musq_instance, settings)
