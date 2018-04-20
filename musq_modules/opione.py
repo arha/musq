@@ -153,8 +153,8 @@ class mm_opione(abstract.mm_abstract):
         super(mm_opione, self).link(musq_instance, settings)
         logging.debug("opione linked!")
         self.musq_instance.get_env_data()
-
-        self.autotopic="/musq/dev/" + self.musq_instance.musq_id
+        self.autotopic = "/musq/dev/" + self.musq_instance.musq_id
+        return True
 
     def setup_autotopic(self):
         logging.debug("Setting up autotopic for %s (id=%s)" % (self.internal_name, self.my_id))

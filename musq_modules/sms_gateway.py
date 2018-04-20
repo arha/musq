@@ -32,6 +32,7 @@ class mm_sms_gateway(abstract.mm_abstract):
         super(mm_sms_gateway, self).link(musq_instance, settings)
         logging.debug("SMS gateway (%s) linked!", self.my_id)
         self.cooldown = self.settings.get("cooldown") or 10
+        return True
 
 """
 url calls:

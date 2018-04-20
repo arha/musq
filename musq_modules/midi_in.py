@@ -175,6 +175,7 @@ class mm_midi_in(abstract.mm_abstract):
         logging.debug("midi_in (%s) linked!", self.my_id)
         if not self.load_routes():
             return False
+        return True
 
     def signal_exit(self):
         super(mm_midi_in, self).signal_exit()

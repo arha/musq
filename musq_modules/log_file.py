@@ -36,8 +36,6 @@ class mm_log_file(abstract.mm_abstract):
         self.file_ptr = open(target_file, 'ba+')
         #self.file_ptr.write(bytes("init\n", "UTF-8"))
         #self.file_ptr.write(bytes("init\n", "UTF-8"))
-
-
         return True
 
     def main(self):

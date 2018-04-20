@@ -38,6 +38,7 @@ class mm_udp_server(abstract.mm_abstract):
     def link(self, musq_instance, settings):
         super(mm_udp_server, self).link(musq_instance, settings)
         logging.debug("udp_server linked!")
+        return True
 
     def main(self):
         self.port = int(self.settings.get("port"))

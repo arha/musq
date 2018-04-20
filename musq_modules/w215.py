@@ -12,18 +12,18 @@ class mm_w215(abstract.mm_abstract):
         self.last_send = 0
         self.__sp = ""
         self.connected = False
+        self.sp = None
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
         m = message.payload.decode('UTF-8')
-        if m  == '0':
+        if m == '0':
             self.sp.state = OFF
-        elif m  == '1':
+        elif m == '1':
             self.sp.state = ON
         return
 
     def link(self, musq_instance, settings):
         super(mm_w215, self).link(musq_instance, settings)
-
         ip = self.settings.get("ip")
         pin = self.settings.get("pin")
         if ip is None or pin is None:
@@ -34,7 +34,6 @@ class mm_w215(abstract.mm_abstract):
             self.sp = None
             return False
 
-        self.sp = None
         try:
             self.sp = SmartPlug(ip, str(pin))
         except NameError:
@@ -53,13 +52,14 @@ class mm_w215(abstract.mm_abstract):
             logging.debug("*** w215 (%s) linked!", self.my_id)
 
         self.connected = True
+        return True
 
     def main(self):
         while True and self.kill_thread:
             sleep (5)
             ts = time.time()
             if ts - self.last_send > 5:
-                self.last_send=ts
+                self.last_send = ts
         logging.debug("Thread finished on w215") 
 
     def run(self):

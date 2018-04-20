@@ -23,6 +23,7 @@ class mm_copy(abstract.mm_abstract):
         self.my_id = self.get_id()
         self.musq_instance = musq_instance
         self.settings = settings
+        return True
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
         destination_topic = self.settings.get("output")

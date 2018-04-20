@@ -21,6 +21,7 @@ class mm_abstract:
         self.my_id = self.get_id()
         self.musq_instance = musq_instance
         self.settings = settings
+        return True
 
     def get_id(self):
         my_id=("%08X" % (id(self)))

@@ -15,3 +15,4 @@ class mm_demo(abstract.mm_abstract):
     def link(self, musq_instance, settings):
         super(mm_demo, self).link(musq_instance, settings)
         logging.debug("demo (%s) linked!", self.my_id)
+        return True

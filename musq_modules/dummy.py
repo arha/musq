@@ -3,7 +3,7 @@ import logging
 
 class mm_dummy(abstract.mm_abstract):
     def __init__(self):
-        self.internal_name="dummy"
+        self.internal_name = "dummy"
 
     def test(self): 
         pass

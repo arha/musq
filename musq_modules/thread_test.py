@@ -16,6 +16,7 @@ class mm_thread_test(abstract.mm_abstract):
     def link(self, musq_instance, settings):
         super(mm_thread_test, self).link(musq_instance, settings)
         logging.debug("thread_test linked!")
+        return True
 
     def main(self):
         while True and not self.kill_thread:

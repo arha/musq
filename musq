@@ -143,12 +143,14 @@ class Musq():
                         instance.topic = [t]
                     elif type(t) is list or type(t) is tuple:
                         instance.topic = t
-                    # "link" it: configure parent instance, pass the module its settings
-                    # todo: don't run the thread if link returns false (ie, module says routes configured)
-                    instance.link(self, settings)
+                    """ linking a module means configure the parent instance, pass the module its settings
+                    if instance.link fails, the module signals it will not handle any routes (maybe due to an
+                    internal configuration error, a connection failure or whatever reason. it basically
+                    signals that, if it has a thread, it can be disabled """
+                    link_ok = instance.link(self, settings)
                     # and now check if it is threadable
                     wants_thread = getattr(instance, "run", None)
-                    if wants_thread:
+                    if wants_thread and link_ok:
                         if settings.get('dev_autostart_thread') and ( settings.get('dev_autostart_thread') is False or  settings.get('dev_autostart_thread') is 0 ):
                             logging.warning("Module %s (%s) may not work, thread autostart disabled by dev_autostart_thread option" % (instance_name, module_name))
                         else:

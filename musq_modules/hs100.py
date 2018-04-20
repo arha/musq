@@ -10,15 +10,14 @@ class mm_hs100(abstract.mm_abstract):
         self.internal_name = "hs100"
         self.last_send = time.time()
         self.last_send = 0
-
         self.plug = None
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
         m = message.payload.decode('UTF-8')
 
-        if m  == '1':
+        if m == '1':
             self.plug.turn_on()
-        elif m  == '0':
+        elif m == '0':
             self.plug.turn_off()
         return
 
@@ -27,7 +26,7 @@ class mm_hs100(abstract.mm_abstract):
         logging.debug("*** hs100 linked!")
 
         ip = self.settings.get("ip")
-        if (ip == None):
+        if ip == None:
             logging.info("hs100 at %s failed to connect", ip)
             self.plug = None
             return False
