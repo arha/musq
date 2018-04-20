@@ -16,7 +16,7 @@ class mm_log_file(abstract.mm_abstract):
 
     def on_message_received(self, topic, trigger_topic, message):
         m=message.payload.decode('UTF-8')
-        if (self.file_ptr != None):
+        if self.file_ptr is not None:
             log_str = ("%s, topic [%s]: %s\n" % (self.musq_instance.formatted_time(), trigger_topic, m))
 
             target_file = self.settings.get("filename")
@@ -24,7 +24,7 @@ class mm_log_file(abstract.mm_abstract):
             self.file_ptr.write(bytes(log_str, "UTF-8"))
             self.file_ptr.close()
 
-            logging.debug("log_file output: " + log_str)
+            #logging.debug("log_file output: " + log_str)
         return
 
     def link(self, musq_instance, settings):
@@ -34,10 +34,9 @@ class mm_log_file(abstract.mm_abstract):
         target_file = self.settings.get("filename")
         logging.debug("target file " + target_file)
         self.file_ptr = open(target_file, 'ba+')
-        #self.file_ptr.write(bytes("init\n", "UTF-8"))
-        #self.file_ptr.write(bytes("init\n", "UTF-8"))
+        self.file_ptr.write(bytes(("%s, Log file opened\n" % self.musq_instance.formatted_time() ), "UTF-8"))
         return True
 
-    def main(self):
-        # doesn't need threading
-        pass
+    def signal_exit(self):
+        self.file_ptr.write(bytes(("%s, Log file closed\n" % self.musq_instance.formatted_time() ), "UTF-8"))
+        super(mm_log_file, self).signal_exit()
