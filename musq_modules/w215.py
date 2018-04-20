@@ -11,6 +11,7 @@ class mm_w215(abstract.mm_abstract):
         self.last_send  =time.time()
         self.last_send = 0
         self.__sp = ""
+        self.connected = False
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
         m = message.payload.decode('UTF-8')
@@ -55,15 +56,23 @@ class mm_w215(abstract.mm_abstract):
             logging.debug("*** connected to w215 plug at %s", self.settings['ip'])
             logging.debug("*** w215 (%s) linked!", self.my_id)
 
+        self.connected = True
+
     def main(self):
-        while True:
-            sleep (0.25)
+        while True and self.kill_thread:
+            sleep (5)
             ts = time.time()
             if ts - self.last_send > 5:
                 self.last_send=ts
-        logging.debug("Thread finished on thread_test")
+        logging.debug("Thread finished on w215") 
 
     def run(self):
+        if not self.connected:
+            logging.debug("Not starting thread for W215 (%s), not connected" % (self.instance_name))
+            return
         logging.debug("thread start")
         self.thread = threading.Thread(target=self.main)
         self.thread.start()
+
+    def signal_exit(self):
+        super(mm_w215, self).signal_exit()

@@ -11,15 +11,15 @@ class mm_hs100(abstract.mm_abstract):
         self.last_send = time.time()
         self.last_send = 0
 
-        self.sp = None
+        self.plug = None
 
     def on_message_received(self, topic, trigger_topic, message, config_line):
         m = message.payload.decode('UTF-8')
 
         if m  == '1':
-            self.sp.turn_on()
+            self.plug.turn_on()
         elif m  == '0':
-            self.sp.turn_off()
+            self.plug.turn_off()
         return
 
     def link(self, musq_instance, settings):
@@ -29,30 +29,35 @@ class mm_hs100(abstract.mm_abstract):
         ip = self.settings.get("ip")
         if (ip == None):
             logging.info("hs100 at %s failed to connect", ip)
-            self.sp = None
+            self.plug = None
             return False
 
-        self.sp = SmartPlug(ip)
+        self.plug = SmartPlug(ip)
         try:
-            if self.sp is None:
-                self.sp = None
+            if self.plug is None:
+                self.plug = None
         except NameError:
             logging.info("hs100 at %s failed to connect", ip)
-            self.sp = None
+            self.plug = None
             return False
 
-        if self.sp is not None:
+        if self.plug is not None:
             logging.debug("*** connected to hs100 plug at %s", self.settings['ip'])
+            logging.debug("Plug name (alias): %s" % self.plug.alias) 
+            logging.debug("Hardware: %s" % self.plug.hw_info) 
+            logging.debug("Sysinfo: %s" % self.plug.hw_info)
+            logging.debug("Plug time=[%s], timezone=[%s]" % (self.plug.time, self.plug.timezone))
 
+    """
     def main(self):
-        while True:
-            sleep(0.25)
+        while True and not self.kill_thread:
+            sleep(0.5)
             ts = time.time()
-            if ts - self.last_send > 5:
-                pass
-        logging.debug("Thread finished on thread_test")
+        logging.debug("Thread finished on hs100")
 
     def run(self):
+        # this should
         logging.debug("thread start")
         self.thread = threading.Thread(target=self.main)
         self.thread.start()
+        """
