@@ -37,15 +37,11 @@ class mm_w215(abstract.mm_abstract):
         self.sp = None
         try:
             self.sp = SmartPlug(ip, str(pin))
-            if self.sp is None:
-                self.sp = None
         except NameError:
             logging.info("w215 at %s with pin %s failed to connect", ip, pin)
-            self.sp = None
             return False
         except Exception:
             logging.info("w215 at %s with pin %s failed to connect", ip, pin)
-            self.sp = None
             return False
 
         if self.sp is not None and self.sp._error_report is not False:

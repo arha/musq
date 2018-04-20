@@ -41,7 +41,7 @@ class mm_udp_server(abstract.mm_abstract):
 
     def main(self):
         self.port = int(self.settings.get("port"))
-        if not self.port:
+        if self.port is None:
             logging.warning("No listening port configured, will default to 7070 but a second udp server will be unable to use 7070")
             self.port = 7070
         if not self.settings.get("ip"):
@@ -63,7 +63,7 @@ class mm_udp_server(abstract.mm_abstract):
 
         if not self.topic:
             logging.warning("No UDP topic configured, will default to /musq/%s/udp/%s" % ( self.musq_instance.musq_id, self.get_id()  ) )
-            self.topic = [ "/musq/%s/udp/%s" %  ( self.musq_instance.musq_id, self.get_id()  ) ]
+            self.topic = ["/musq/%s/udp/%s" %  ( self.musq_instance.musq_id, self.get_id())]
 
         with socketserver.UDPServer(("", self.port), handler) as udpd:
             udpd.parent = self
@@ -77,12 +77,16 @@ class mm_udp_server(abstract.mm_abstract):
         datagram = handler.rfile.readline().strip()
         logging.debug("Received UDP message, ip=%s: %s" % (ip, datagram))
 
-        self.musq_instance.raw_publish(self, datagram, self.topic, self.qos, self.retain )
+        self.musq_instance.raw_publish(self, datagram, self.topic, self.qos, self.retain)
 
     def run(self):
         logging.debug("thread start for udp_server")
         self.thread = threading.Thread(target=self.main)
         self.thread.start()
+
+    def signal_exit(self):
+        super(mm_udp_server, self).signal_exit()
+        self.httpd.shutdown()
 
 
 class MusqUDPHandler(socketserver.DatagramRequestHandler):

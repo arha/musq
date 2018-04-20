@@ -32,7 +32,7 @@ class mm_pizero(abstract.mm_abstract):
                         file.write("1")
 
     def main(self):
-        while True:
+        while True and not self.kill_thread:
             sleep (1)
             ts = time.time()
             if ts - self.last_send > 10:
