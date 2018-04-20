@@ -100,7 +100,7 @@ class platform_rpi(platform_linux.platform_linux):
     def hat_setup(self):
         logging.debug("Setting up hat %s" % self.hat_name)
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         self.process_message(trigger_topic, message.payload.decode("UTF-8"))
         return
 

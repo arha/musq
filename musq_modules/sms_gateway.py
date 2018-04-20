@@ -14,7 +14,7 @@ class mm_sms_gateway(abstract.mm_abstract):
         self.cooldown = 10
         self.last_sent_ts = 0
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         message = message.payload.decode('UTF-8')
 
         n = PlivoSMSGateway()

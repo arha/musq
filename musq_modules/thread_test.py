@@ -10,7 +10,7 @@ class mm_thread_test(abstract.mm_abstract):
         self.last_send = time.time()
         self.last_send = 0
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         return
 
     def link(self, musq_instance, settings):

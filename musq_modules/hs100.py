@@ -12,7 +12,7 @@ class mm_hs100(abstract.mm_abstract):
         self.last_send = 0
         self.plug = None
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         m = message.payload.decode('UTF-8')
 
         if m == '1':

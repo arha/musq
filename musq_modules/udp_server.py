@@ -31,7 +31,7 @@ class mm_udp_server(abstract.mm_abstract):
         self.retain = False
         self.topic = None
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         logging.warning(topic, trigger_topic, message, "aaa")
         return
 

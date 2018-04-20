@@ -25,7 +25,7 @@ class mm_copy(abstract.mm_abstract):
         self.settings = settings
         return True
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         destination_topic = self.settings.get("output")
         if destination_topic is None:
             logging.warning("Copy %s received message on %s but has no destination, add an \"output\" field in config" % (self.instance_name, trigger_topic))

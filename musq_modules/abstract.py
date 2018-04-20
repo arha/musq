@@ -31,5 +31,5 @@ class mm_abstract:
         self.kill_thread = True
         logging.debug("Requesting graceful exit for %s (%s)" % (self.instance_name, self.internal_name))
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         pass

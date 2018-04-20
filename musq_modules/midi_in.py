@@ -27,7 +27,7 @@ class mm_midi_in(abstract.mm_abstract):
     def __init__(self):
         self.internal_name="midi_in"
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         pass
 
     def load_routes(self):

@@ -12,7 +12,7 @@ class mm_unicorn(abstract.mm_abstract):
         unicorn.brightness(1)
         width,height=unicorn.get_shape()
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         logging.debug("message=" + message.payload.decode('UTF-8'))

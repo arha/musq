@@ -14,7 +14,7 @@ class mm_w215(abstract.mm_abstract):
         self.connected = False
         self.sp = None
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         m = message.payload.decode('UTF-8')
         if m == '0':
             self.sp.state = OFF

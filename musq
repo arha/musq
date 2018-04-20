@@ -92,13 +92,13 @@ class Musq():
     def on_message(self, client, userdatanp, msg):
         if self.killer.kill_now:
             return
-        #logging.debug("Received message on topic: " + msg.topic+" "+str(msg.payload))
-        
+        #logging.debug("Received message on topic: " + msg.topic +" "+str(msg.payload))
+
         if self.platform.topic is not None:
             for platform_topic in self.platform.topic:
                 if mqtt.topic_matches_sub(platform_topic, msg.topic):
                     #logging.debug("Received message for platform; topic received: " + msg.topic)
-                    self.platform.on_message_received(platform_topic, msg.topic, msg, "x config line")
+                    self.platform.on_message_received(platform_topic, msg.topic, msg)
 
         for name, module in self.modules.items():
             if module.topic is None:
@@ -107,7 +107,7 @@ class Musq():
             for module_topic in module.topic:
                 if mqtt.topic_matches_sub(module_topic, msg.topic):
                     #logging.debug("Received message for module: " + module.internal_name + "; topic received: " + msg.topic)
-                    module.on_message_received(module_topic, msg.topic, msg, "x config line")
+                    module.on_message_received(module_topic, msg.topic, msg)
 
     def heartbeat(self):
         self.raw_publish(self, self.formatted_time(), "/musq/heartbeat/" + self.musq_id, 2, True)
@@ -371,7 +371,7 @@ class GracefulKiller:
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
-    def exit_gracefully(self,signum, frame):
+    def exit_gracefully(self, signum, frame):
         self.kill_now = True
         # cleanup the stdout log so the rest of the log looks ok during disconnect/last will & testament messages.
         # Yes, i'm avoiding the ^C

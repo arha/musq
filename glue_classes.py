@@ -160,6 +160,6 @@ class input_glue_module(input_glue):
         self.module.signal_exit()
 
     def execute(self, topic_received, msg):
-        if (self.topic != None and self.topic_matches_sub(self.topic, topic_received)):
+        if (self.topic != None and self.topic_matches_sub(self.topic)):
             logging.debug("Calling module: " + self.name + "; topic received: " + topic_received)
-            self.module.on_message_received(self.topic, topic_received, msg, "x config line")
+            self.module.on_message_received(self.topic, topic_received, msg)

@@ -10,7 +10,7 @@ class mm_pizero(abstract.mm_abstract):
         prefix = "pizero"
         self.last_send = 0
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         logging.debug("message=" + message.payload.decode('UTF-8'))
