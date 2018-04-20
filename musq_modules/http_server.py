@@ -128,12 +128,12 @@ class mm_http_server(abstract.mm_abstract):
 
 
 class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    server_version = "musq/0.1"
     parent = None
 
     def _set_headers(self):
+        server_version = "musq/" + self.musq.__version__
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
+        self.send_header('Content-type', 'text/plain')
         self.end_headers()
 
     def do_HEAD(self):

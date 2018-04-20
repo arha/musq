@@ -181,13 +181,13 @@ class mm_midi_in(abstract.mm_abstract):
 
     def _on_note_on(self, timestamp, note, channel, velocity):
         #logging.debug("midi in note on: ts=%s, note=%s, channel=%s, velocity=%s " % (timestamp, note, channel, velocity))
-        routes = self.match_routes_for_midi_input(midi_command.note_on, channel, note=note, velocity=velocity)
+        routes = self.match_routes_for_midi_input(midi_command.note_on, channel, note=note-4, velocity=velocity)
         if routes:
             self.publish_note_onoff(routes, note, channel, velocity)
 
     def _on_note_off(self, timestamp, note, channel, velocity):
         #logging.debug("midi in note off change: ts=%s, note=%s, channel=%s, velocity=%s " % (timestamp, note, channel, velocity))
-        routes = self.match_routes_for_midi_input(midi_command.note_off, channel, note=note, velocity=velocity)
+        routes = self.match_routes_for_midi_input(midi_command.note_off, channel, note=note-4, velocity=velocity)
         if routes:
             self.publish_note_onoff(routes, note, channel, velocity)
 

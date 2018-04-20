@@ -13,7 +13,7 @@ from os.path import isfile
 
 
 class Musq():
-    __version__ = "0.3.1 rev 90"
+    __version__ = "0.3.2 rev 60"
     mqtt_server = "localhost"
     mqtt_port = "1883"
     mqtt_client_id="musq-default"
@@ -57,7 +57,7 @@ class Musq():
             self.platform.run()
 
         logging.info("-----------------------------")
-        logging.info('musq starting; musq_id = %s' % (self.musq_id))
+        logging.info('musq %s starting; musq_id = %s' % (self.__version__, self.musq_id))
 
         self.modules = self.load_modules()
         self.env = self.get_env_data()
@@ -144,6 +144,7 @@ class Musq():
                     elif type(t) is list or type(t) is tuple:
                         instance.topic = t
                     # "link" it: configure parent instance, pass the module its settings
+                    # todo: don't run the thread if link returns false (ie, module says routes configured)
                     instance.link(self, settings)
                     # and now check if it is threadable
                     wants_thread = getattr(instance, "run", None)
