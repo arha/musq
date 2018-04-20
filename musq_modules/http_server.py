@@ -41,7 +41,7 @@ class mm_http_server(abstract.mm_abstract):
                     route_dict["topic"] = data.get("topic").strip()
                     self.routes[route] = route_dict
 
-    def on_message_received(self, topic, trigger_topic, message, config_line):
+    def on_message_received(self, topic, trigger_topic, message):
         return
         logging.warning("***")
         logging.warning("*** http_server does not accept mqtt messages. ")
@@ -53,11 +53,11 @@ class mm_http_server(abstract.mm_abstract):
         super(mm_http_server, self).link(musq_instance, settings)
         self.configure_routes()
         logging.debug("http_server linked!")
+        return True
 
     def main(self):
         port = int(self.settings.get("port")) or 8000
         handler = MusqHTTPRequestHandler
-
         # eugh, can't use "with" unless running python 3.6
         # https://stackoverflow.com/questions/46396575/cannot-run-python3-httpserver-on-arm-processoru
         self.httpd = http.server.HTTPServer(("", port), handler)
@@ -68,9 +68,10 @@ class mm_http_server(abstract.mm_abstract):
             certkey = None
             if self.settings.get("keyfile") is not None:
                 certkey = self.settings.get("keyfile")
-            self.httpd.socket = ssl.wrap_socket (self.httpd.socket, certfile=cert, keyfile=certkey, server_side=True)
+            self.httpd.socket = ssl.wrap_socket(self.httpd.socket, certfile=cert, keyfile=certkey, server_side=True)
             logging.info("HTTPS configured succesfully")
         logging.info("Starting musq HTTP server on 0.0.0.0:%d", port)
+        self.httpd.musq_instance = self.musq_instance
         self.httpd.serve_forever()
         logging.debug("Thread finished on HTTP server")
         return
@@ -106,7 +107,7 @@ class mm_http_server(abstract.mm_abstract):
             if topic is not None:
                 qos = 2
                 retain = False
-                self.musq_instance.raw_publish(self, message, topic, qos, retain )
+                self.musq_instance.raw_publish(self, message, topic, qos, retain)
                 # todo return code, improve checking based on methods
                 response = "<pre>ok\r\n" + method + "\r\n\r\n" + str(headers) + "\r\n"
 
@@ -128,12 +129,20 @@ class mm_http_server(abstract.mm_abstract):
 
 
 class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
+    # TODO there's some connection close/hanging issue, ie: request from firefox, request from curl, for some reason it hangs
+    # now do ^C, request from firefox again and I get, on windows
+    # ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+    # no idea what triggers this, yet
+
     parent = None
+    protocol_version = "HTTP/1.0"
 
     def _set_headers(self):
-        server_version = "musq/" + self.musq.__version__
+        server_version = "musq/" + self.server.musq_instance.__version__
+        self.server_version = server_version
         self.send_response(200)
         self.send_header('Content-type', 'text/plain')
+        #self.send_header('Connection', 'close')
         self.end_headers()
 
     def do_HEAD(self):
@@ -141,19 +150,26 @@ class MusqHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         self._set_headers()
-        self.server.parent.perform_route(self)
+        result = self.server.parent.perform_route(self)
 
     def do_POST(self):
         self._set_headers()
-        self.server.parent.perform_route(self)
+        result =  self.server.parent.perform_route(self)
 
     def do_PUT(self):
         self._set_headers()
-        self.server.parent.perform_route(self)
+        result = self.server.parent.perform_route(self)
 
     def do_DELETE(self):
         self._set_headers()
-        self.server.parent.perform_route(self)
+        result = self.server.parent.perform_route(self)
+        self.done_processing(result)
+
+    def done_processing(self, result):
+        print("HTTP connection closing...")
+        self.finish()
+        self.close_connection()
+        print("HTTP connection closed")
 
     def log_message(self, format, *args):
         return
