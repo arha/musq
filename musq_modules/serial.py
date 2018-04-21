@@ -5,7 +5,7 @@ import time
 import threading
 import re
 
-from lib.serialbox.serialbox import Serialbox
+from musq_libs.serialbox.serialbox import Serialbox
 
 class mm_serial(abstract.mm_abstract):
     def __init__(self):
