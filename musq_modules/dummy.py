@@ -16,7 +16,6 @@ class mm_dummy(abstract.mm_abstract):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         logging.debug("message=" + message.payload.decode('UTF-8'))
-        
 
     def run(self):
         """ dummy module, does nothing """
