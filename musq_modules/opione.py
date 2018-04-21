@@ -72,7 +72,7 @@ class mm_opione(abstract.mm_abstract):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         # logging.debug("message=" + message.payload.decode('UTF-8'))
-        # logging.debug("config_line=" + config_line)
+        #
         if self.is_topic_relevant(trigger_topic):
             t = self.split_topic(trigger_topic, topic)
             topic_mode = t['matching_topic']

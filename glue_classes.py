@@ -141,7 +141,7 @@ class input_glue_script(input_glue):
                     my_env["MUSQ_MESSAGE"] = msg.payload
                     print("------ BEGIN GLUE SCRIPT EXEC -----")
                     try:
-                        subprocess.call(call, env=my_env, shell=True)
+                        subprocess.call(call, env=my_env)
                     except:
                         traceback.print_exc()
                     print("------- DONE GLUE SCRIPT EXEC -----")

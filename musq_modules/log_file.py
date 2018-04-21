@@ -18,13 +18,10 @@ class mm_log_file(abstract.mm_abstract):
         m=message.payload.decode('UTF-8')
         if self.file_ptr is not None:
             log_str = ("%s, topic [%s]: %s\n" % (self.musq_instance.formatted_time(), trigger_topic, m))
-
             target_file = self.settings.get("filename")
             self.file_ptr = open(target_file, 'ba+')
             self.file_ptr.write(bytes(log_str, "UTF-8"))
             self.file_ptr.close()
-
-            #logging.debug("log_file output: " + log_str)
         return
 
     def link(self, musq_instance, settings):

@@ -14,7 +14,7 @@ class mm_pizero(abstract.mm_abstract):
         logging.debug("topic=" + topic)
         logging.debug("trigger_topic=" + trigger_topic)
         logging.debug("message=" + message.payload.decode('UTF-8'))
-        logging.debug("config_line=" + config_line)
+
         
         topic_p=trigger_topic.split('/')
         if (len(topic_p) < 4):

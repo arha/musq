@@ -24,20 +24,24 @@ class  mm_script_out(abstract.mm_abstract):
 
     def on_message_received(self, topic, trigger_topic, message):
         msg = message.payload.decode('UTF-8')
-        for script in self.scripts:
-            command = script
-            command = command.replace('$value', msg)
-            command = command.replace('$topic', message.topic)
-            my_env = os.environ.copy()
-            my_env["MUSQ_TOPIC_IN"] = message.topic
-            my_env["MUSQ_MESSAGE"] = msg
-            my_env["MUSQ_TRIGGER"] = "on_message"
-            my_env["MUSQ_INSTANCE_NAME"] = self.instance_name
-            logging.debug("%s (%s) executing script: %s" % (self.instance_name, self.internal_name, command))
-            try:
-                subprocess.call(command, env=my_env, shell=True)
-            except:
-                traceback.print_exc()
+        command = self.settings.get("script")
+        command = command.replace('$value', msg)
+        command = command.replace('$topic', message.topic)
+        my_env = os.environ.copy()
+        my_env["MUSQ_TOPIC_IN"] = message.topic
+        my_env["MUSQ_MESSAGE"] = msg
+        my_env["MUSQ_TRIGGER"] = "on_message"
+        my_env["MUSQ_INSTANCE_NAME"] = self.instance_name
+        logging.debug("%s (%s) executing script: %s" % (self.instance_name, self.internal_name, command))
+        try:
+            proc = subprocess.Popen(command, env=my_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = proc.communicate()
+            exitcode = proc.returncode
+            logging.debug("Process finished, exit code = %s" % exitcode)
+            logging.debug("Output = %s" % out)
+            self.send_result(out.decode("UTF-8"), exitcode)
+        except:
+            traceback.print_exc()
 
 
     def link(self, musq_instance, settings):
@@ -55,26 +59,35 @@ class  mm_script_out(abstract.mm_abstract):
             ts = time.time()
             if ts - self.last_send > repeat:
                 self.last_send = time.time()
-                for script in self.scripts:
-                    command = script
-                    my_env = os.environ.copy()
-                    my_env["MUSQ_TRIGGER"] = "timed"
-                    my_env["MUSQ_INSTANCE_NAME"] = self.instance_name
-                    logging.debug("%s (%s) executing script: %s" % (self.instance_name, self.internal_name, command))
-                    try:
-                        # subprocess.call(command, env=my_env, shell=True)
-                        proc = subprocess.Popen(command, env=my_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        out, err = proc.communicate()
-                        exitcode = proc.returncode
-                        logging.debug("Process finished, exit code = %s" % exitcode)
-                        logging.debug("Output = %s" % out)
-                    except:
-                        traceback.print_exc()
+                command = self.settings.get("script")
+                my_env = os.environ.copy()
+                my_env["MUSQ_TRIGGER"] = "timed"
+                my_env["MUSQ_INSTANCE_NAME"] = self.instance_name
+                logging.debug("%s (%s) executing script: %s" % (self.instance_name, self.internal_name, command))
+                try:
+                    # subprocess.call(command, env=my_env, shell=True)
+                    proc = subprocess.Popen(command, env=my_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    out, err = proc.communicate()
+                    exitcode = proc.returncode
+                    logging.debug("Process finished, exit code = %s" % exitcode)
+                    logging.debug("Output = %s" % out)
+                    self.send_result(out.decode("UTF-8"), exitcode)
+                except:
+                    traceback.print_exc()
         logging.debug("Thread finished on script_out")
 
     def run(self):
-        if self.settings.get("repeat") is None:
-            logging.debug("")
+        if self.settings.get("repeat") is None or self.settings.get("repeat") == 0 or self.settings.get("repeat") == "0":
+            logging.debug("Auto-repeat set to none; script will only be invoked from mqtt")
+            return
         logging.debug("thread start for script_out")
         self.thread = threading.Thread(target=self.main)
         self.thread.start()
+
+    def send_result(self, out, exitcode):
+        if self.settings.get("topic_out") is not None:
+            t = self.settings.get("topic_out")
+            self.musq_instance.raw_publish(self, out, t)
+        if self.settings.get("topic_out_exitcode") is not None:
+            t = self.settings.get("topic_out_exitcode")
+            self.musq_instance.raw_publish(self, exitcode, t)
