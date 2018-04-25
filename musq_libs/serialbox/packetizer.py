@@ -51,7 +51,6 @@ class LaxCRLFPacketizer(SerialPacketizer):
       packet = self.data[:-1]
       self.data = b''
       if packet != b'\r' and packet != b'\n' and packet != b'':
-        # logging.info("packet: >%s<, remains >%s<" % (packet, self.data))
         self.packetAssembledCallback(packet)
 
 class SLIP1055Packetizer(SerialPacketizer):
@@ -102,7 +101,6 @@ class SLIP1055Packetizer(SerialPacketizer):
   def _stepFSM(self, byte):
     byte_value = ord(byte)
     """ runs a single step through the FSM packet decoder, used when appending a byte. internal use """
-    # logging.info("FSM step, last byte: >%s<" % lastByte)
 
     if byte_value == self.ESC_END and self.state == self.STATE_ESC:
       self.state = self.STATE_NORMAL
@@ -121,7 +119,6 @@ class SLIP1055Packetizer(SerialPacketizer):
       packet = self.data
       self.data = b''
       if packet != b'':
-        # logging.info("packet: >%s<, remains >%s<" % (packet, self.data))
         self.packetAssembledCallback(packet)
       else:
         logging.debug("Discarded empty packet")
