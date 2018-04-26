@@ -124,3 +124,87 @@ class SLIP1055Packetizer(SerialPacketizer):
         logging.debug("Discarded empty packet")
     else:
       self.data += byte
+
+class COBSPacketizer(SerialPacketizer):
+  # COBS
+  # https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing
+  # it's rather cool and unknown
+  # http://conferences.sigcomm.org/sigcomm/1997/papers/p062.pdf
+  # todo: http://www.inescporto.pt/~jsc/publications/conferences/2007JaimeICC.pdf
+  group_length = 0
+  STATE_START = 0
+  STATE_DATA = 1
+  STATE_MARKER = 2
+  state = STATE_START
+
+  def prepare(self, data, encoding="UTF-8"):
+    if isinstance(data, str):
+      raise TypeError('Unicode-objects must be encoded as bytes first')
+    out_bytes = bytearray()
+
+    out_bytes.append(0) # packet length
+    last_pointer = 0     # index in output of the group header byte (length of following packet)
+    input_index = 0      # position in read buffer
+    count = 1             # how many chars we put in the out buffer, used to add a new group byte on == 0xFE
+    for byte in data:
+      if byte != 0:
+        if count == 255:
+          #print("X Replacing pointer at %s with value %s" % (last_pointer, count))
+          out_bytes[last_pointer] = count
+          last_pointer = len(out_bytes)
+          out_bytes.append(0)
+          count = 1
+        out_bytes.append(byte)
+        count += 1
+        input_index += 1
+      else:
+        #print("0 Replacing pointer at %s with value %s" % (last_pointer, count))
+        out_bytes[last_pointer] = count
+        last_pointer = len(out_bytes)
+        out_bytes.append(0)
+        count = 1
+        #( ":".join("{:02x}".format(c) for c in out_bytes) )
+
+
+    #print("F Replacing pointer at %s with value %s" % (last_pointer, count))
+    out_bytes[last_pointer] = count
+    out_bytes.append(0)
+    return bytes(out_bytes)
+
+  def feed(self, byte):
+    self._stepFSM(byte)
+
+  def feedString(self, string, encoding="UTF-8"):
+    try:
+      data = string.encode(encoding)
+    except:
+      data = string
+      """ eh, maybe it's already bytes """
+    for i in range(len(data)):
+      self.feed(data[i:i + 1])
+
+  def _stepFSM(self, byte):
+    byte_value = ord(byte)
+    if byte_value == 0:
+      #print("  END: %02X" % byte_value)
+      packet = self.data
+      self.data = b''
+      if packet != b'':
+        self.packetAssembledCallback(packet)
+      else:
+        logging.debug("Discarded empty packet")
+    elif self.state == self.STATE_START:
+      self.group_length = byte_value
+      #logging.debug("Got marker length: %s" % byte_value)
+      self.state = self.STATE_DATA
+      #print("START: %02X, %d" % (byte_value, self.group_length))
+    elif self.state == self.STATE_DATA:
+      self.group_length -= 1
+      if self.group_length == 0:
+        #print("_MARK: %02X" % byte_value)
+        self.group_length = byte_value
+        self.data += bytes([0])
+      else:
+        self.data += byte
+        #print("DATA : %02X, %d" % (byte_value, self.group_length))
+        #print(":".join("{:02x}".format(c) for c in self.data))
